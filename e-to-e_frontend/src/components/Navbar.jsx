@@ -21,26 +21,32 @@ const Navbar = () => {
     useEffect(() => {
         // Entrance animation
         const ctx = gsap.context(() => {
-            gsap.from(logoRef.current, {
-                y: -30,
-                opacity: 0,
+            // Set initial hidden state
+            gsap.set(logoRef.current, { y: -30, opacity: 0 })
+            gsap.set('.nav__link', { y: -20, opacity: 0 })
+            gsap.set('.nav__cta', { y: -20, opacity: 0 })
+
+            // Animate in
+            gsap.to(logoRef.current, {
+                y: 0,
+                opacity: 1,
                 duration: 1,
                 ease: 'power3.out',
                 delay: 0.3,
             })
 
-            gsap.from('.nav__link', {
-                y: -20,
-                opacity: 0,
+            gsap.to('.nav__link', {
+                y: 0,
+                opacity: 1,
                 duration: 0.8,
                 ease: 'power3.out',
                 stagger: 0.1,
                 delay: 0.5,
             })
 
-            gsap.from('.nav__cta', {
-                y: -20,
-                opacity: 0,
+            gsap.to('.nav__cta', {
+                y: 0,
+                opacity: 1,
                 duration: 0.8,
                 ease: 'power3.out',
                 delay: 0.9,
@@ -76,6 +82,7 @@ const Navbar = () => {
                             {link.label}
                         </a>
                     ))}
+
                 </div>
 
                 <Link to="/login" className="nav__cta btn btn--primary">

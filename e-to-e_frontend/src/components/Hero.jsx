@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -12,7 +12,9 @@ const Hero = () => {
     const subRef = useRef(null)
     const btnsRef = useRef(null)
     const overlayRef = useRef(null)
+    const videoRef = useRef(null)
     const [modalOpen, setModalOpen] = useState(false)
+    const [isPlaying, setIsPlaying] = useState(false)
 
     useEffect(() => {
         const ctx = gsap.context(() => {
@@ -43,26 +45,30 @@ const Hero = () => {
                 }
             })
 
+            // Set initial hidden state explicitly
+            gsap.set('.hero__word-inner', { y: '110%', opacity: 0 })
+            gsap.set(subRef.current, { y: 40, opacity: 0 })
+            gsap.set(btnsRef.current.children, { y: 30, opacity: 0 })
+
             // Main timeline
             const tl = gsap.timeline({ delay: 0.5 })
 
-            tl.from('.hero__word-inner', {
-                y: '110%',
-                rotateX: -80,
-                opacity: 0,
+            tl.to('.hero__word-inner', {
+                y: '0%',
+                opacity: 1,
                 duration: 1.2,
                 ease: 'power4.out',
                 stagger: 0.08,
             })
-                .from(subRef.current, {
-                    y: 40,
-                    opacity: 0,
+                .to(subRef.current, {
+                    y: 0,
+                    opacity: 1,
                     duration: 1,
                     ease: 'power3.out',
                 }, '-=0.4')
-                .from(btnsRef.current.children, {
-                    y: 30,
-                    opacity: 0,
+                .to(btnsRef.current.children, {
+                    y: 0,
+                    opacity: 1,
                     duration: 0.8,
                     ease: 'power3.out',
                     stagger: 0.15,
@@ -126,8 +132,41 @@ const Hero = () => {
         return () => ctx.revert()
     }, [])
 
-    const openModal = () => setModalOpen(true)
-    const closeModal = () => setModalOpen(false)
+    const openModal = () => {
+        setModalOpen(true)
+        setIsPlaying(false)
+    }
+
+    const closeModal = () => {
+        setModalOpen(false)
+        setIsPlaying(false)
+        if (videoRef.current) {
+            videoRef.current.pause()
+            videoRef.current.currentTime = 0
+        }
+    }
+
+    const handlePlayClick = useCallback(() => {
+        const video = videoRef.current
+        if (video) {
+            const playPromise = video.play()
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    setIsPlaying(true)
+                }).catch((err) => {
+                    console.warn('Video play failed:', err)
+                    // Fallback: show controls so user can play manually
+                    video.controls = true
+                    setIsPlaying(true)
+                })
+            }
+        }
+    }, [])
+
+    // Callback ref for video element to ensure ref is assigned
+    const setVideoRef = useCallback((node) => {
+        videoRef.current = node
+    }, [])
 
     return (
         <>
@@ -150,10 +189,14 @@ const Hero = () => {
                             Where Food Rescue Meets Climate Responsibility
                         </p>
                         <div ref={btnsRef} className="hero__buttons">
-                            <Link to="/login" className="btn btn--primary hero__btn">
-                                <span>Get Started</span>
+                            <Link to="/login" className="btn btn--primary hero__btn" id="login-register-btn">
                                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5" />
+                                    <path d="M2 14c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                </svg>
+                                <span>Login / Register</span>
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                             </Link>
                             <button onClick={openModal} className="btn btn--outline hero__btn" id="watch-demo-btn">
@@ -178,12 +221,48 @@ const Hero = () => {
                     <button className="modal-close" onClick={closeModal} aria-label="Close modal">
                         ✕
                     </button>
-                    {modalOpen && (
-                        <video controls autoPlay>
-                            <source src="/etoe.mp4" type="video/mp4" />
-                            Your browser does not support the video tag.
-                        </video>
-                    )}
+
+                    {/* Motivational Text */}
+                    <div className="modal-header">
+                        <p className="modal-quote">
+                            "Every meal rescued is a life touched and a planet healed."
+                        </p>
+                        <span className="modal-quote-author">— Extra-To-Essential</span>
+                    </div>
+
+                    {/* Video Container with Curvy Edges */}
+                    <div className="modal-video-container">
+                        {modalOpen && (
+                            <video
+                                ref={setVideoRef}
+                                controls={isPlaying}
+                                muted
+                                playsInline
+                                preload="metadata"
+                                onEnded={() => setIsPlaying(false)}
+                                onPause={() => setIsPlaying(false)}
+                                onPlay={() => setIsPlaying(true)}
+                            >
+                                <source src="/etoe.mp4" type="video/mp4" />
+                                Your browser does not support the video tag.
+                            </video>
+                        )}
+
+                        {/* Play Button Overlay */}
+                        {modalOpen && !isPlaying && (
+                            <button
+                                className="modal-play-btn"
+                                onClick={handlePlayClick}
+                                aria-label="Play video"
+                                id="modal-play-btn"
+                            >
+                                <div className="modal-play-btn__ring"></div>
+                                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                                    <polygon points="10,5 24,14 10,23" fill="currentColor" />
+                                </svg>
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </>

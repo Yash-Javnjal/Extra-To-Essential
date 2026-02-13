@@ -1,0 +1,117 @@
+/* ── Workflow Section ── */
+.workflow__flow {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+    padding: var(--space-2xl) 0;
+}
+
+.workflow__step-wrapper {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.workflow__step-wrapper:last-child {
+    flex: 0 0 auto;
+}
+
+.workflow__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 140px;
+    max-width: 160px;
+}
+
+.workflow__step-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--radius-xl);
+    background: var(--swiss-coffee);
+    color: var(--tundora);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--space-lg);
+    transition: all 0.5s var(--ease-out-expo);
+    position: relative;
+}
+
+.workflow__step-icon::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: calc(var(--radius-xl) + 4px);
+    border: 1.5px dashed transparent;
+    transition: border-color var(--transition-base);
+}
+
+.workflow__step:hover .workflow__step-icon {
+    background: var(--tundora);
+    color: var(--white);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.workflow__step:hover .workflow__step-icon::after {
+    border-color: var(--swiss-coffee);
+}
+
+.workflow__step-label {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--tundora);
+    margin-bottom: var(--space-xs);
+}
+
+.workflow__step-desc {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--boulder);
+    max-width: 140px;
+}
+
+.workflow__connector {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    position: relative;
+    min-width: 40px;
+    margin-top: 36px;
+    padding: 0 var(--space-sm);
+}
+
+.workflow__connector-dot {
+    position: absolute;
+    right: -3px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--tundora);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .workflow__flow {
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+    }
+
+    .workflow__step-wrapper {
+        flex-direction: column;
+    }
+
+    .workflow__connector {
+        transform: rotate(90deg);
+        min-height: 40px;
+        margin-top: 0;
+        margin: var(--space-sm) 0;
+    }
+}

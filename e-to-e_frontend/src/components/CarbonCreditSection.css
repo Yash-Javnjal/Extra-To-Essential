@@ -1,0 +1,122 @@
+/* ── Carbon Credit Section ── */
+.carbon__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4xl);
+    align-items: center;
+}
+
+.carbon__image-wrapper {
+    position: relative;
+    border-radius: var(--radius-2xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+}
+
+.carbon__image {
+    width: 100%;
+    height: 520px;
+    object-fit: cover;
+}
+
+.carbon__image-badge {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md) var(--space-lg);
+    text-align: center;
+}
+
+.carbon__badge-value {
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--tundora);
+    line-height: 1;
+}
+
+.carbon__badge-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--boulder);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.carbon__content-col {
+    padding-left: var(--space-xl);
+}
+
+.carbon__description {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--pale-sky);
+    margin-bottom: var(--space-2xl);
+}
+
+.carbon__features {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-2xl);
+}
+
+.carbon__feature {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+}
+
+.carbon__feature-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: var(--swiss-coffee);
+    color: var(--tundora);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+}
+
+.carbon__feature:hover .carbon__feature-icon {
+    background: var(--tundora);
+    color: var(--white);
+}
+
+.carbon__feature-text {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    padding-top: 8px;
+}
+
+.carbon__cta {
+    margin-top: var(--space-md);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .carbon__grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-2xl);
+    }
+
+    .carbon__content-col {
+        padding-left: 0;
+    }
+
+    .carbon__image {
+        height: 380px;
+    }
+}
+
+@media (max-width: 480px) {
+    .carbon__image {
+        height: 280px;
+    }
+}

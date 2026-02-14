@@ -279,7 +279,7 @@ function AuthPage() {
                     className="auth-form-panel auth-form-panel--register"
                     ref={formPanelRegisterRef}
                 >
-                    <div className="auth-form-inner">
+                    <div className="auth-form-inner auth-form-inner--register" data-lenis-prevent>
                         <div className="auth-form-container">
                             <RegisterForm ref={registerFormRef} onToggle={showLogin} />
                         </div>

@@ -118,18 +118,23 @@ export default function DonationForm({ onSuccess }) {
             return
         }
 
+        // Validate expiry_time is in the future
+        const parsedExpiry = new Date(form.expiry_time)
+        if (isNaN(parsedExpiry.getTime()) || parsedExpiry <= new Date()) {
+            setError('Expiry time must be a valid date in the future.')
+            return
+        }
+
         setSubmitting(true)
         try {
             await createListing({
                 food_type: form.food_type,
                 quantity_kg: parseFloat(form.quantity_kg),
                 meal_equivalent: parseInt(form.meal_equivalent, 10),
-                packaging_type: form.packaging_type || null,
-                expiry_time: form.expiry_time,
+                expiry_time: parsedExpiry.toISOString(),
                 pickup_address: form.pickup_address,
                 latitude: form.latitude,
                 longitude: form.longitude,
-                special_instructions: form.special_instructions || null,
             })
 
             playSuccessAnimation(submitBtnRef.current)

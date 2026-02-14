@@ -16,12 +16,10 @@ router.post('/', authenticateUser, donorOnly, async (req, res) => {
       food_type,
       quantity_kg,
       meal_equivalent,
-      packaging_type,
       expiry_time,
       pickup_address,
       latitude,
       longitude,
-      special_instructions
     } = req.body;
 
     // Validation
@@ -32,12 +30,39 @@ router.post('/', authenticateUser, donorOnly, async (req, res) => {
       });
     }
 
+    // ── Normalise expiry_time to a full ISO 8601 TIMESTAMPTZ string ──
+    // The frontend <input type="datetime-local"> sends "2026-02-14T12:00"
+    // (no timezone).  We treat that as the user's local time and convert it
+    // to a proper ISO string so PostgreSQL can compare it against
+    // created_at (which defaults to NOW()).
+    const parsedExpiry = new Date(expiry_time);
+    if (isNaN(parsedExpiry.getTime())) {
+      return res.status(400).json({
+        error: 'Invalid expiry_time',
+        message: 'expiry_time must be a valid date-time string'
+      });
+    }
+
+    // Satisfy the CHECK constraint: expiry_time > created_at (≈ NOW())
+    if (parsedExpiry <= new Date()) {
+      return res.status(400).json({
+        error: 'Invalid expiry_time',
+        message: 'Expiry time must be in the future'
+      });
+    }
+
+    const expiryISO = parsedExpiry.toISOString(); // e.g. "2026-02-14T06:30:00.000Z"
+
     // Get donor_id
-    const { data: donor } = await supabaseAdmin
+    const { data: donor, error: donorError } = await supabaseAdmin
       .from('donors')
       .select('donor_id')
       .eq('profile_id', req.user.id)
       .single();
+
+    if (donorError) {
+      console.error('Donor lookup error:', donorError);
+    }
 
     if (!donor) {
       return res.status(404).json({
@@ -46,7 +71,7 @@ router.post('/', authenticateUser, donorOnly, async (req, res) => {
       });
     }
 
-    // Create listing
+    // Create listing — only insert columns that exist in the schema
     const { data: listing, error } = await supabaseAdmin
       .from('food_listings')
       .insert({
@@ -54,12 +79,10 @@ router.post('/', authenticateUser, donorOnly, async (req, res) => {
         food_type,
         quantity_kg,
         meal_equivalent,
-        packaging_type: packaging_type || null,
-        expiry_time,
+        expiry_time: expiryISO,
         pickup_address,
         latitude,
         longitude,
-        special_instructions: special_instructions || null,
         status: 'open',
         is_locked: false
       })
@@ -67,6 +90,12 @@ router.post('/', authenticateUser, donorOnly, async (req, res) => {
       .single();
 
     if (error) {
+      console.error('Supabase insert error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
       return res.status(500).json({
         error: 'Failed to create listing',
         message: error.message
@@ -276,12 +305,10 @@ router.put('/:listing_id', authenticateUser, donorOnly, async (req, res) => {
       food_type,
       quantity_kg,
       meal_equivalent,
-      packaging_type,
       expiry_time,
       pickup_address,
       latitude,
       longitude,
-      special_instructions
     } = req.body;
 
     // Get donor_id
@@ -321,12 +348,19 @@ router.put('/:listing_id', authenticateUser, donorOnly, async (req, res) => {
     if (food_type !== undefined) updates.food_type = food_type;
     if (quantity_kg !== undefined) updates.quantity_kg = quantity_kg;
     if (meal_equivalent !== undefined) updates.meal_equivalent = meal_equivalent;
-    if (packaging_type !== undefined) updates.packaging_type = packaging_type;
-    if (expiry_time !== undefined) updates.expiry_time = expiry_time;
+    if (expiry_time !== undefined) {
+      const parsedExpiry = new Date(expiry_time);
+      if (isNaN(parsedExpiry.getTime()) || parsedExpiry <= new Date()) {
+        return res.status(400).json({
+          error: 'Invalid expiry_time',
+          message: 'Expiry time must be a valid date in the future'
+        });
+      }
+      updates.expiry_time = parsedExpiry.toISOString();
+    }
     if (pickup_address !== undefined) updates.pickup_address = pickup_address;
     if (latitude !== undefined) updates.latitude = latitude;
     if (longitude !== undefined) updates.longitude = longitude;
-    if (special_instructions !== undefined) updates.special_instructions = special_instructions;
 
     const { data: listing, error } = await supabaseAdmin
       .from('food_listings')

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import './BlogSection.css'
@@ -8,6 +9,7 @@ gsap.registerPlugin(ScrollTrigger)
 const blogs = [
     {
         id: 'donor-story',
+        anchor: 'story-donor',
         image: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=600&h=400&fit=crop',
         tag: 'Donor Story',
         title: 'How a Local Restaurant Feeds 200 Families Weekly',
@@ -15,6 +17,7 @@ const blogs = [
     },
     {
         id: 'ngo-story',
+        anchor: 'story-ngo',
         image: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=600&h=400&fit=crop',
         tag: 'NGO Story',
         title: 'From Zero to 5,000 Meals — A Grassroots Journey',
@@ -22,6 +25,7 @@ const blogs = [
     },
     {
         id: 'volunteer-story',
+        anchor: 'story-volunteer',
         image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=600&h=400&fit=crop',
         tag: 'Volunteer Story',
         title: 'The Student Who Bridges the Last Mile',
@@ -98,12 +102,12 @@ const BlogSection = () => {
                             <div className="blog-card__body">
                                 <h3 className="blog-card__title">{blog.title}</h3>
                                 <p className="blog-card__excerpt">{blog.excerpt}</p>
-                                <button className="blog-card__link">
+                                <Link to={`/stories#${blog.anchor}`} className="blog-card__link">
                                     Read More
                                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                                         <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
-                                </button>
+                                </Link>
                             </div>
                         </article>
                     ))}

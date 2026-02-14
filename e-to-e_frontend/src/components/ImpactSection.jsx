@@ -7,17 +7,17 @@ gsap.registerPlugin(ScrollTrigger)
 
 const images = [
     {
-        src: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=500&h=600&fit=crop',
+        src: 'https://i.pinimg.com/1200x/01/cb/59/01cb594e81b8f206112381272dece68b.jpg',
         alt: 'Children receiving meals',
         size: 'tall',
     },
     {
-        src: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=500&h=350&fit=crop',
+        src: 'https://i.pinimg.com/1200x/a0/43/9f/a0439f18d0d9b31750edfe190d62c9c4.jpg',
         alt: 'Volunteers packing food',
         size: 'normal',
     },
     {
-        src: 'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=500&h=350&fit=crop',
+        src: 'https://i.pinimg.com/736x/ad/ff/61/adff61a9c69eca3760995813f25b7d2a.jpg',
         alt: 'Community gathering',
         size: 'normal',
     },
@@ -27,8 +27,8 @@ const images = [
         size: 'normal',
     },
     {
-        src: 'https://images.unsplash.com/photo-1504159506876-f8338247a14a?w=500&h=600&fit=crop',
-        alt: 'Sustainability initiative',
+        src: 'https://scontent.fsse2-1.fna.fbcdn.net/v/t39.30808-6/493219278_1118688313609041_1028603906708738977_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=833d8c&_nc_ohc=sdiBLp3ihUIQ7kNvwH0ecqg&_nc_oc=AdlNVYwFpN9OaHBSZFyCS6IMU3qR2IdSD1aH4FrtBlvWztH5lKiLedBaITNk0jdppXoVv6X1skUDgmX-yAxNbGY4&_nc_zt=23&_nc_ht=scontent.fsse2-1.fna&_nc_gid=pUzr-MZDqDAcZfKsA46oIw&oh=00_AfuwWFgPy9eNWpfEOq_NfVxkBINWLKjQXXDDzrc2giUrLQ&oe=69954D4B',
+        alt: 'One Plate',
         size: 'tall',
     },
     {

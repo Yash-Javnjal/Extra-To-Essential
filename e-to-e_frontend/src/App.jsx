@@ -4,6 +4,8 @@ import Lenis from 'lenis'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import LandingPage from './pages/LandingPage'
+import AuthPage from './pages/AuthPage'
+import StoriesPage from './pages/StoriesPage'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -42,19 +44,8 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: 'var(--font-serif)',
-          fontSize: 'clamp(1.5rem, 3vw, 2.5rem)',
-          color: 'var(--tundora)',
-        }}>
-          Login Page — Coming Soon
-        </div>
-      } />
+      <Route path="/login" element={<AuthPage />} />
+      <Route path="/stories" element={<StoriesPage />} />
     </Routes>
   )
 }

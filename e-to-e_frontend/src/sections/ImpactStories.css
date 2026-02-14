@@ -1,0 +1,407 @@
+/* =============================================
+   IMPACT STORIES — Luxury Editorial Section
+   Full-width editorial layout for desktop
+   ============================================= */
+
+/* ── Story Section Rhythm ── */
+.story-section {
+    position: relative;
+    padding: var(--space-5xl) 0;
+}
+
+.story-section+.story-section {
+    border-top: none;
+}
+
+/* ── Section Label / Title / Subtitle — full width ── */
+.story-section__label {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: var(--space-lg);
+    display: block;
+}
+
+.story-section__title {
+    font-family: var(--font-serif);
+    font-size: clamp(2rem, 4.5vw, 3.4rem);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+    max-width: 700px;
+}
+
+.story-section__subtitle {
+    font-family: var(--font-sans);
+    font-size: clamp(0.95rem, 1.3vw, 1.08rem);
+    font-weight: 400;
+    line-height: 1.7;
+    color: var(--text-secondary);
+}
+
+/* Dark / Coffee section overrides */
+.section--dark .story-section__label {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.section--dark .story-section__title {
+    color: var(--white);
+}
+
+.section--dark .story-prose p {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.section--coffee .story-section__label {
+    color: var(--boulder);
+}
+
+/* ── Full-Width Cinematic Image ── */
+.story-image-wrapper {
+    position: relative;
+    margin-bottom: var(--space-4xl);
+    border-radius: var(--radius-2xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+.story-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 21 / 9;
+    object-fit: cover;
+    will-change: transform;
+}
+
+/* ── Two-Column Editorial Grid ── */
+.story-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4xl);
+    align-items: start;
+    margin-bottom: var(--space-3xl);
+}
+
+.story-grid--reverse {
+    direction: rtl;
+}
+
+.story-grid--reverse>* {
+    direction: ltr;
+}
+
+/* Sticky image column on desktop */
+.story-grid__image {
+    position: sticky;
+    top: calc(var(--navbar-height) + var(--space-xl));
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+.story-grid__image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+}
+
+.story-grid__content {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Metadata / Credits — full-width strip ── */
+.story-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xl);
+    margin-bottom: var(--space-3xl);
+    padding: var(--space-xl) 0;
+    border-top: 1px solid var(--swiss-coffee);
+    border-bottom: 1px solid var(--swiss-coffee);
+}
+
+.section--coffee .story-meta {
+    border-color: rgba(127, 122, 123, 0.25);
+}
+
+.story-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 120px;
+}
+
+.story-meta__label {
+    font-family: var(--font-sans);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.story-meta__value {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.section--coffee .story-meta__value {
+    color: var(--tundora);
+}
+
+/* ── Editorial Prose — fill available width ── */
+.story-prose {
+    margin-bottom: var(--space-2xl);
+}
+
+.story-prose p {
+    font-family: var(--font-sans);
+    font-size: clamp(0.92rem, 1.1vw, 1.05rem);
+    font-weight: 400;
+    line-height: 1.85;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xl);
+}
+
+.story-prose p:last-child {
+    margin-bottom: 0;
+}
+
+/* ── Pull Quote — spanning, impactful ── */
+.story-pullquote {
+    font-family: var(--font-serif);
+    font-size: clamp(1.3rem, 2.2vw, 1.85rem);
+    font-weight: 500;
+    font-style: italic;
+    line-height: 1.45;
+    color: var(--text-primary);
+    margin: var(--space-3xl) 0;
+    padding-left: var(--space-xl);
+    border-left: 2px solid var(--swiss-coffee);
+}
+
+/* Full-width pullquote (outside grid) */
+.story-pullquote--full {
+    max-width: none;
+    padding: var(--space-3xl) 0;
+    padding-left: var(--space-2xl);
+    margin: 0 0 var(--space-3xl);
+    border-left: 3px solid var(--swiss-coffee);
+}
+
+.section--coffee .story-pullquote {
+    border-left-color: var(--tundora);
+}
+
+/* ── Divider ── */
+.story-divider {
+    width: 100%;
+    max-width: 80px;
+    height: 1px;
+    background-color: var(--swiss-coffee);
+    margin: var(--space-2xl) 0;
+    border: none;
+}
+
+.section--coffee .story-divider {
+    background-color: var(--boulder);
+    opacity: 0.35;
+}
+
+/* ── Impact Stats — spread horizontally ── */
+.story-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2xl);
+    margin: var(--space-3xl) 0;
+    padding: var(--space-2xl) 0;
+    border-top: 1px solid var(--swiss-coffee);
+}
+
+.section--coffee .story-stats {
+    border-color: rgba(127, 122, 123, 0.25);
+}
+
+.story-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.story-stat__number {
+    font-family: var(--font-serif);
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.story-stat__desc {
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+/* ── CTA ── */
+.story-cta {
+    margin-top: var(--space-xl);
+}
+
+/* ── Page Intro ── */
+.stories-intro {
+    padding: calc(var(--navbar-height) + var(--space-4xl)) 0 var(--space-3xl);
+    text-align: center;
+}
+
+.stories-intro__label {
+    font-family: var(--font-sans);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: var(--space-md);
+    display: block;
+}
+
+.stories-intro__title {
+    font-family: var(--font-serif);
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.stories-intro__subtitle {
+    font-family: var(--font-sans);
+    font-size: clamp(0.95rem, 1.2vw, 1.05rem);
+    font-weight: 400;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+.stories-intro__divider {
+    width: 48px;
+    height: 1px;
+    background-color: var(--swiss-coffee);
+    margin: var(--space-2xl) auto 0;
+    border: none;
+}
+
+/* ── Closing section ── */
+.story-closing {
+    text-align: center;
+    padding: var(--space-2xl) 0;
+}
+
+.story-closing p {
+    font-family: var(--font-sans);
+    font-size: clamp(0.92rem, 1.1vw, 1.02rem);
+    line-height: 1.8;
+    color: var(--text-secondary);
+    max-width: 540px;
+    margin: 0 auto var(--space-2xl);
+}
+
+/* ══════════ RESPONSIVE ══════════ */
+
+/* ── Tablet ── */
+@media (max-width: 1024px) {
+    .story-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-2xl);
+    }
+
+    .story-grid--reverse {
+        direction: ltr;
+    }
+
+    .story-grid__image {
+        position: relative;
+        top: auto;
+    }
+
+    .story-grid__image img {
+        aspect-ratio: 16 / 9;
+    }
+
+    .story-section {
+        padding: var(--space-4xl) 0;
+    }
+
+    .story-stats {
+        gap: var(--space-xl);
+    }
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+    .story-section {
+        padding: var(--space-3xl) 0;
+    }
+
+    .story-pullquote {
+        font-size: clamp(1.1rem, 4vw, 1.4rem);
+        margin: var(--space-2xl) 0;
+        padding-left: var(--space-lg);
+    }
+
+    .story-meta {
+        gap: var(--space-lg);
+    }
+
+    .story-stats {
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+    }
+
+    .story-image {
+        aspect-ratio: 16 / 9;
+    }
+
+    .stories-intro {
+        padding-top: calc(var(--navbar-height) + var(--space-2xl));
+        padding-bottom: var(--space-xl);
+    }
+}
+
+/* ── Small ── */
+@media (max-width: 480px) {
+    .story-section {
+        padding: var(--space-2xl) 0;
+    }
+
+    .story-image-wrapper,
+    .story-grid__image {
+        border-radius: var(--radius-lg);
+    }
+
+    .stories-intro__title {
+        font-size: clamp(1.8rem, 7vw, 2.4rem);
+    }
+
+    .story-meta-item {
+        min-width: 100px;
+    }
+}

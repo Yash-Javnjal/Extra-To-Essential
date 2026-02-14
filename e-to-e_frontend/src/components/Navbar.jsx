@@ -57,10 +57,11 @@ const Navbar = () => {
     }, [])
 
     const navLinks = [
-        { label: 'About', href: '#about' },
-        { label: 'Impact', href: '#impact' },
-        { label: 'Blog', href: '#blog' },
-        { label: 'How It Works', href: '#workflow' },
+        { label: 'Home', href: '/#home' },
+        { label: 'About', href: '/#about' },
+        { label: 'Impact', href: '/#impact' },
+        { label: 'Blog', href: '/#blog' },
+        { label: 'How It Works', href: '/#workflow' },
     ]
 
     return (

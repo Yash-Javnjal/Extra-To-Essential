@@ -5,6 +5,8 @@ import { createListing } from '../../lib/donorApi'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
 /* Fix Leaflet default marker icon */
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -70,11 +72,11 @@ export default function DonationForm({ onSuccess }) {
         setForm((prev) => ({ ...prev, [name]: value }))
     }
 
-    /* ── Reverse geocode via Nominatim ── */
+    /* ── Reverse geocode via backend proxy ── */
     const reverseGeocode = useCallback(async (lat, lng) => {
         try {
             const res = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+                `${API_URL}/geocode/reverse?format=json&lat=${lat}&lon=${lng}`
             )
             const data = await res.json()
             return data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`

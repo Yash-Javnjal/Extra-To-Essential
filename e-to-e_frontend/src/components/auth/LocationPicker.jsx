@@ -14,7 +14,8 @@ L.Icon.Default.mergeOptions({
 /* ─── Solapur, India as default center ─── */
 const DEFAULT_CENTER = [17.6599, 75.9064]
 const DEFAULT_ZOOM = 12
-const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const NOMINATIM_BASE = `${API_URL}/geocode`
 
 /* ─── Nominatim rate-limit helper (1 req/sec) ─── */
 let lastNominatimCall = 0
@@ -25,9 +26,7 @@ async function nominatimFetch(url) {
         await new Promise((r) => setTimeout(r, 1000 - diff))
     }
     lastNominatimCall = Date.now()
-    const res = await fetch(url, {
-        headers: { 'User-Agent': 'FoodRedistributionApp/1.0' },
-    })
+    const res = await fetch(url)
     if (!res.ok) throw new Error('Geocoding request failed')
     return res.json()
 }

@@ -28,6 +28,7 @@ const listingRoutes = require('./routes/listings');
 const claimRoutes = require('./routes/claims');
 const deliveryRoutes = require('./routes/deliveries');
 const impactRoutes = require('./routes/impact');
+const geocodeRoutes = require('./routes/geocode');
 
 // Health check endpoint
 app.get('/', (req, res) => {
@@ -62,6 +63,7 @@ app.use('/api/listings', listingRoutes);
 app.use('/api/claims', claimRoutes);
 app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/impact', impactRoutes);
+app.use('/api/geocode', geocodeRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -75,7 +77,7 @@ app.use((req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err);
-  
+
   res.status(err.status || 500).json({
     error: err.name || 'Internal Server Error',
     message: err.message || 'An unexpected error occurred',

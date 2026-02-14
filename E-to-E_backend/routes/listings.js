@@ -102,16 +102,21 @@ router.get('/', authenticateUser, async (req, res) => {
 
     // If NGO, get listings within service radius
     if (req.user.role === 'ngo') {
-      const { data: ngo } = await supabaseAdmin
+      const { data: ngo, error: ngoError } = await supabaseAdmin
         .from('ngos')
         .select('ngo_id')
         .eq('profile_id', req.user.id)
         .single();
 
+      if (ngoError) {
+        console.error('NGO lookup error:', ngoError);
+      }
+
       if (ngo) {
         const result = await getAvailableListingsForNGO(ngo.ngo_id);
 
         if (!result.success) {
+          console.error('getAvailableListingsForNGO failed:', result.error);
           return res.status(500).json({
             error: 'Failed to fetch listings',
             message: result.error
@@ -148,7 +153,12 @@ router.get('/', authenticateUser, async (req, res) => {
     const { data: listings, error } = await query;
 
     if (error) {
-      console.error('Listings query error:', error);
+      console.error('Listings query error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
       return res.status(500).json({
         error: 'Unable to load food listings at this time. Please try again.',
         message: error.message

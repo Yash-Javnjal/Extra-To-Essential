@@ -16,10 +16,12 @@ router.post('/', authenticateUser, donorOnly, async (req, res) => {
       food_type,
       quantity_kg,
       meal_equivalent,
+      packaging_type,
       expiry_time,
       pickup_address,
       latitude,
-      longitude
+      longitude,
+      special_instructions
     } = req.body;
 
     // Validation
@@ -52,10 +54,12 @@ router.post('/', authenticateUser, donorOnly, async (req, res) => {
         food_type,
         quantity_kg,
         meal_equivalent,
+        packaging_type: packaging_type || null,
         expiry_time,
         pickup_address,
         latitude,
         longitude,
+        special_instructions: special_instructions || null,
         status: 'open',
         is_locked: false
       })
@@ -262,10 +266,12 @@ router.put('/:listing_id', authenticateUser, donorOnly, async (req, res) => {
       food_type,
       quantity_kg,
       meal_equivalent,
+      packaging_type,
       expiry_time,
       pickup_address,
       latitude,
-      longitude
+      longitude,
+      special_instructions
     } = req.body;
 
     // Get donor_id
@@ -305,10 +311,12 @@ router.put('/:listing_id', authenticateUser, donorOnly, async (req, res) => {
     if (food_type !== undefined) updates.food_type = food_type;
     if (quantity_kg !== undefined) updates.quantity_kg = quantity_kg;
     if (meal_equivalent !== undefined) updates.meal_equivalent = meal_equivalent;
+    if (packaging_type !== undefined) updates.packaging_type = packaging_type;
     if (expiry_time !== undefined) updates.expiry_time = expiry_time;
     if (pickup_address !== undefined) updates.pickup_address = pickup_address;
     if (latitude !== undefined) updates.latitude = latitude;
     if (longitude !== undefined) updates.longitude = longitude;
+    if (special_instructions !== undefined) updates.special_instructions = special_instructions;
 
     const { data: listing, error } = await supabaseAdmin
       .from('food_listings')

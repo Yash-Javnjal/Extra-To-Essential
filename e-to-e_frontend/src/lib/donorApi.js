@@ -97,3 +97,12 @@ export async function getDonorLeaderboard(limit = 10) {
 export async function getCurrentUser() {
     return apiFetch('/auth/me')
 }
+
+export async function logoutUser() {
+    try {
+        await apiFetch('/auth/logout', { method: 'POST' })
+    } finally {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+    }
+}

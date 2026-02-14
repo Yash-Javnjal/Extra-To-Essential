@@ -52,6 +52,7 @@ export default function DonationForm({ onSuccess }) {
         food_type: '',
         quantity_kg: '',
         meal_equivalent: '',
+        packaging_type: '',
         expiry_time: '',
         pickup_address: '',
         latitude: null,
@@ -121,10 +122,12 @@ export default function DonationForm({ onSuccess }) {
                 food_type: form.food_type,
                 quantity_kg: parseFloat(form.quantity_kg),
                 meal_equivalent: parseInt(form.meal_equivalent, 10),
+                packaging_type: form.packaging_type || null,
                 expiry_time: form.expiry_time,
                 pickup_address: form.pickup_address,
                 latitude: form.latitude,
                 longitude: form.longitude,
+                special_instructions: form.special_instructions || null,
             })
 
             playSuccessAnimation(submitBtnRef.current)
@@ -135,6 +138,7 @@ export default function DonationForm({ onSuccess }) {
                 food_type: '',
                 quantity_kg: '',
                 meal_equivalent: '',
+                packaging_type: '',
                 expiry_time: '',
                 pickup_address: '',
                 latitude: null,
@@ -228,6 +232,27 @@ export default function DonationForm({ onSuccess }) {
                         value={form.meal_equivalent}
                         onChange={handleChange}
                     />
+                </div>
+
+                {/* Packaging Type */}
+                <div className="dd-form-group">
+                    <label htmlFor="packaging_type" className="dd-form-label">
+                        Packaging Type
+                    </label>
+                    <select
+                        id="packaging_type"
+                        name="packaging_type"
+                        className="dd-form-select"
+                        value={form.packaging_type}
+                        onChange={handleChange}
+                    >
+                        <option value="">Select packaging</option>
+                        {PACKAGING_TYPES.map((t) => (
+                            <option key={t} value={t}>
+                                {t}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 {/* Expiry Time */}

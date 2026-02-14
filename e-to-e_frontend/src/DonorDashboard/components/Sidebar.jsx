@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { useNavigate } from 'react-router-dom'
+import { logoutUser } from '../../lib/donorApi'
 
 const NAV_ITEMS = [
     {
@@ -82,9 +83,14 @@ export default function Sidebar({ activeSection, onNavigate, user, collapsed, on
     const displayName = user?.full_name || 'Donor'
     const role = user?.role || 'donor'
 
-    const handleLogout = () => {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+    const handleLogout = async () => {
+        try {
+            await logoutUser()
+        } catch {
+            // Clear tokens even if backend call fails
+            localStorage.removeItem('access_token')
+            localStorage.removeItem('refresh_token')
+        }
         navigate('/login')
     }
 

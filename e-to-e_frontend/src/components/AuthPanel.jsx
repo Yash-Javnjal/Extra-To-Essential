@@ -114,13 +114,13 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle }, ref) {
             // Redirect based on role
             switch (role) {
                 case 'admin':
-                    navigate('/admin/dashboard')
+                    navigate('/') // admin dashboard not built yet
                     break
                 case 'ngo':
-                    navigate('/ngo/dashboard')
+                    navigate('/') // ngo dashboard not built yet
                     break
                 case 'donor':
-                    navigate('/donor/dashboard')
+                    navigate('/donor-dashboard')
                     break
                 default:
                     navigate('/')
@@ -143,10 +143,10 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle }, ref) {
 
             {error && <div className="auth-error-msg">{error}</div>}
 
-            
+
 
             <form onSubmit={handleLogin}>
-        
+
                 <div className="auth-fields" ref={fieldsRef}>
                     <div className="auth-input-group">
                         <label htmlFor="login-email">Email</label>
@@ -378,7 +378,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 longitude: donorLng,
                 csr_participant: csrParticipant,
             })
-            navigate('/donor/dashboard')
+            navigate('/donor-dashboard')
         } catch (err) {
             setError(err.message || 'Failed to create donor profile.')
         } finally {
@@ -412,7 +412,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 longitude: ngoLng,
                 service_radius_km: serviceRadius,
             })
-            navigate('/ngo/dashboard')
+            navigate('/') // ngo dashboard not built yet
         } catch (err) {
             setError(err.message || 'Failed to create NGO profile.')
         } finally {
@@ -422,7 +422,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
 
     /* ── Step 2 — Admin (already registered, just redirect) ── */
     const handleAdminComplete = () => {
-        navigate('/admin/dashboard')
+        navigate('/') // admin dashboard not built yet
     }
 
     /* ── Render ── */

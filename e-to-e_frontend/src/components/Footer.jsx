@@ -105,7 +105,7 @@ const Footer = () => {
                         © 2026 Extra-To-Essential. All rights reserved.
                     </p>
                     <p className="footer__credit">
-                        Build and Beyond
+                        By Yash Javanjal and Tanishq Shivasharan
                     </p>
                 </div>
             </div>

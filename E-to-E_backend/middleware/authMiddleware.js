@@ -1,4 +1,4 @@
-const { supabase } = require('../config/supabaseClient');
+const { supabase, supabaseAdmin } = require('../config/supabaseClient');
 
 /**
  * Middleware to verify Supabase JWT and attach user profile to request
@@ -7,7 +7,7 @@ const authenticateUser = async (req, res, next) => {
   try {
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         error: 'Unauthorized',
@@ -27,8 +27,8 @@ const authenticateUser = async (req, res, next) => {
       });
     }
 
-    // Fetch user profile
-    const { data: profile, error: profileError } = await supabase
+    // Fetch user profile using admin client to bypass RLS
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('*')
       .eq('id', user.id)
@@ -64,19 +64,19 @@ const authenticateUser = async (req, res, next) => {
 const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
-      
+
       const { data: { user }, error } = await supabase.auth.getUser(token);
-      
+
       if (!error && user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
-        
+
         if (profile) {
           req.user = {
             id: user.id,
@@ -86,7 +86,7 @@ const optionalAuth = async (req, res, next) => {
         }
       }
     }
-    
+
     next();
   } catch (error) {
     // Don't fail on optional auth errors

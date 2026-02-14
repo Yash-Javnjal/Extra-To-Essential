@@ -3,12 +3,12 @@ import { animateActiveRows } from '../animations/dashboardAnimations'
 import { SkeletonTable } from './Loader'
 
 const STATUS_MAP = {
-    open: { label: 'Pending', className: 'dd-status--pending' },
-    in_discussion: { label: 'Accepted', className: 'dd-status--accepted' },
-    claimed: { label: 'Volunteer Assigned', className: 'dd-status--assigned' },
-    in_transit: { label: 'Pickup In Progress', className: 'dd-status--in-progress' },
-    delivered: { label: 'Completed', className: 'dd-status--completed' },
-    cancelled: { label: 'Cancelled', className: 'dd-status--cancelled' },
+    open: { label: 'Open', className: 'dd-status--pending' },
+    in_discussion: { label: 'In Discussion', className: 'dd-status--accepted' },
+    claimed: { label: 'Claimed', className: 'dd-status--assigned' },
+    scheduled: { label: 'Pickup Scheduled', className: 'dd-status--in-progress' },
+    picked: { label: 'Picked Up', className: 'dd-status--in-progress' },
+    completed: { label: 'Completed', className: 'dd-status--completed' },
     expired: { label: 'Expired', className: 'dd-status--cancelled' },
 }
 

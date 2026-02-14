@@ -1,14 +1,22 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import './LiveDashboard.css'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const stats = [
+/* Default fallback values shown while the API loads or if it fails */
+const FALLBACK = {
+    total_ngos: 70,
+    total_donors: 150,
+    total_food_kg: 12000,
+    total_co2_tonnes: 8,
+}
+
+const CARD_META = [
     {
         id: 'ngos',
-        value: 70,
+        fallbackKey: 'total_ngos',
         suffix: '+',
         label: 'Partner NGOs',
         icon: (
@@ -19,7 +27,7 @@ const stats = [
     },
     {
         id: 'donors',
-        value: 150,
+        fallbackKey: 'total_donors',
         suffix: '+',
         label: 'Active Donors',
         icon: (
@@ -30,7 +38,7 @@ const stats = [
     },
     {
         id: 'food',
-        value: 12000,
+        fallbackKey: 'total_food_kg',
         suffix: ' KG',
         label: 'Food Donated',
         icon: (
@@ -42,7 +50,7 @@ const stats = [
     },
     {
         id: 'co2',
-        value: 8,
+        fallbackKey: 'total_co2_tonnes',
         suffix: ' Tonnes',
         label: 'CO₂ Reduced',
         icon: (
@@ -54,9 +62,37 @@ const stats = [
     },
 ]
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
 const LiveDashboard = () => {
     const sectionRef = useRef(null)
     const cardsRef = useRef([])
+    const [liveStats, setLiveStats] = useState(FALLBACK)
+
+    /* Fetch real impact data from backend (public endpoint, no auth needed) */
+    useEffect(() => {
+        let cancelled = false
+        async function fetchImpact() {
+            try {
+                const res = await fetch(`${API_URL}/impact/total`)
+                if (!res.ok) return
+                const data = await res.json()
+                if (cancelled) return
+
+                const m = data.metrics || data
+                setLiveStats({
+                    total_ngos: m.total_ngos ?? m.ngo_count ?? FALLBACK.total_ngos,
+                    total_donors: m.total_donors ?? m.donor_count ?? FALLBACK.total_donors,
+                    total_food_kg: Math.round(parseFloat(m.total_food_saved_kg ?? m.total_food_kg ?? FALLBACK.total_food_kg)),
+                    total_co2_tonnes: parseFloat(((m.total_co2_reduced_kg ?? m.total_co2_kg ?? FALLBACK.total_co2_tonnes * 1000) / 1000).toFixed(1)),
+                })
+            } catch {
+                /* keep fallback values */
+            }
+        }
+        fetchImpact()
+        return () => { cancelled = true }
+    }, [])
 
     useEffect(() => {
         const ctx = gsap.context(() => {
@@ -91,13 +127,14 @@ const LiveDashboard = () => {
             })
 
             // Counter animation
-            stats.forEach((stat, i) => {
+            CARD_META.forEach((card, i) => {
                 const valueEl = cardsRef.current[i]?.querySelector('.stat-card__value-num')
                 if (!valueEl) return
 
+                const targetVal = liveStats[card.fallbackKey] ?? 0
                 const obj = { val: 0 }
                 gsap.to(obj, {
-                    val: stat.value,
+                    val: targetVal,
                     duration: 2,
                     delay: i * 0.2,
                     ease: 'power2.out',
@@ -107,16 +144,16 @@ const LiveDashboard = () => {
                         toggleActions: 'play none none reverse',
                     },
                     onUpdate: () => {
-                        valueEl.textContent = stat.value >= 1000
+                        valueEl.textContent = targetVal >= 1000
                             ? Math.round(obj.val).toLocaleString()
-                            : Math.round(obj.val)
+                            : Math.round(obj.val * 10) / 10
                     },
                 })
             })
         }, sectionRef)
 
         return () => ctx.revert()
-    }, [])
+    }, [liveStats])
 
     return (
         <section ref={sectionRef} className="dashboard section section--coffee" id="about">
@@ -130,19 +167,19 @@ const LiveDashboard = () => {
                 </div>
 
                 <div className="dashboard__grid">
-                    {stats.map((stat, i) => (
+                    {CARD_META.map((card, i) => (
                         <div
-                            key={stat.id}
+                            key={card.id}
                             className="stat-card"
                             ref={(el) => (cardsRef.current[i] = el)}
-                            id={`stat-${stat.id}`}
+                            id={`stat-${card.id}`}
                         >
-                            <div className="stat-card__icon">{stat.icon}</div>
+                            <div className="stat-card__icon">{card.icon}</div>
                             <div className="stat-card__value">
                                 <span className="stat-card__value-num">0</span>
-                                <span className="stat-card__value-suffix">{stat.suffix}</span>
+                                <span className="stat-card__value-suffix">{card.suffix}</span>
                             </div>
-                            <p className="stat-card__label">{stat.label}</p>
+                            <p className="stat-card__label">{card.label}</p>
                         </div>
                     ))}
                 </div>

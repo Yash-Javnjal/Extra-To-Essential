@@ -25,15 +25,16 @@ export default function IncomingDonations() {
 
     /* Extract donor info — geo-matched listings may have flat fields or nested donors */
     function getDonorName(listing) {
-        if (listing.donors?.profiles?.organization_name) return listing.donors.profiles.organization_name
         if (listing.organization_name) return listing.organization_name
+        if (listing.donors?.organization_name) return listing.donors.organization_name
         if (listing.donor_name) return listing.donor_name
+        if (listing.donors?.city) return `Donor (${listing.donors.city})`
         return 'Unknown Donor'
     }
 
     function getDonorPhone(listing) {
-        if (listing.donors?.profiles?.phone) return listing.donors.profiles.phone
         if (listing.phone) return listing.phone
+        if (listing.donors?.phone) return listing.donors.phone
         return '—'
     }
 
@@ -113,8 +114,8 @@ export default function IncomingDonations() {
                             <td>
                                 <span
                                     className={`ngo-expiry-badge ${getTimeRemaining(listing.expiry_time) === 'Expired'
-                                            ? 'ngo-expiry-badge--expired'
-                                            : ''
+                                        ? 'ngo-expiry-badge--expired'
+                                        : ''
                                         }`}
                                 >
                                     {getTimeRemaining(listing.expiry_time)}

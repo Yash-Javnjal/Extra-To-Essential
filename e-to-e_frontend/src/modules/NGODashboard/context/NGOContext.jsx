@@ -61,6 +61,18 @@ export function NGOProvider({ children }) {
         )
     }, [])
 
+    /* ─── Error Mapping ─── */
+    const friendlyError = useCallback((err) => {
+        const msg = err?.message || err?.error || 'Unknown error'
+        if (msg.includes('stack depth') || msg.includes('recursion'))
+            return 'Temporary server issue. Data will refresh shortly.'
+        if (msg.includes('not found'))
+            return 'Data is unavailable at the moment.'
+        if (msg.includes('network') || msg.includes('fetch'))
+            return 'Connection issue. Please check your internet.'
+        return msg.length < 80 ? msg : 'Something went wrong loading data.'
+    }, [])
+
     /* ─── Data Fetchers ─── */
     const fetchProfile = useCallback(async () => {
         try {
@@ -68,7 +80,7 @@ export function NGOProvider({ children }) {
             setNgoProfile(data.ngo)
             return data.ngo
         } catch (err) {
-            setErrors((prev) => ({ ...prev, profile: err.message || 'Failed to load profile' }))
+            setErrors((prev) => ({ ...prev, profile: friendlyError(err) }))
             return null
         }
     }, [])
@@ -80,7 +92,7 @@ export function NGOProvider({ children }) {
             setListings(data.listings || [])
             setErrors((prev) => ({ ...prev, listings: null }))
         } catch (err) {
-            setErrors((prev) => ({ ...prev, listings: err.message || 'Failed to load listings' }))
+            setErrors((prev) => ({ ...prev, listings: friendlyError(err) }))
         } finally {
             setLoading((l) => ({ ...l, listings: false }))
         }
@@ -93,7 +105,7 @@ export function NGOProvider({ children }) {
             setClaims(data.claims || [])
             setErrors((prev) => ({ ...prev, claims: null }))
         } catch (err) {
-            setErrors((prev) => ({ ...prev, claims: err.message || 'Failed to load claims' }))
+            setErrors((prev) => ({ ...prev, claims: friendlyError(err) }))
         } finally {
             setLoading((l) => ({ ...l, claims: false }))
         }
@@ -106,7 +118,7 @@ export function NGOProvider({ children }) {
             setVolunteers(data.volunteers || [])
             setErrors((prev) => ({ ...prev, volunteers: null }))
         } catch (err) {
-            setErrors((prev) => ({ ...prev, volunteers: err.message || 'Failed to load volunteers' }))
+            setErrors((prev) => ({ ...prev, volunteers: friendlyError(err) }))
         } finally {
             setLoading((l) => ({ ...l, volunteers: false }))
         }
@@ -119,7 +131,7 @@ export function NGOProvider({ children }) {
             setDeliveries(data.deliveries || [])
             setErrors((prev) => ({ ...prev, deliveries: null }))
         } catch (err) {
-            setErrors((prev) => ({ ...prev, deliveries: err.message || 'Failed to load deliveries' }))
+            setErrors((prev) => ({ ...prev, deliveries: friendlyError(err) }))
         } finally {
             setLoading((l) => ({ ...l, deliveries: false }))
         }

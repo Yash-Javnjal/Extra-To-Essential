@@ -1,38 +1,132 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
-import { useJsApiLoader, GoogleMap, Marker, Circle } from '@react-google-maps/api'
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
+import { MapContainer, TileLayer, Marker, Circle, useMapEvents, useMap } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
-const LIBRARIES = ['places']
+/* ─── Fix Leaflet default marker icons in bundlers (Vite/Webpack) ─── */
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+})
 
-const MAP_STYLES = [
-    { elementType: 'geometry', stylers: [{ color: '#f5f0ed' }] },
-    { elementType: 'labels.text.fill', stylers: [{ color: '#443c3c' }] },
-    { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
-    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#e8e1de' }] },
-    { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#d4ccca' }] },
-    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#c8d6e5' }] },
-    { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#dce8d4' }] },
-    { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-]
+/* ─── Solapur, India as default center ─── */
+const DEFAULT_CENTER = [17.6599, 75.9064]
+const DEFAULT_ZOOM = 12
+const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org'
 
-const MAP_OPTIONS = {
-    styles: MAP_STYLES,
-    disableDefaultUI: true,
-    zoomControl: true,
-    mapTypeControl: false,
-    streetViewControl: false,
-    fullscreenControl: false,
+/* ─── Nominatim rate-limit helper (1 req/sec) ─── */
+let lastNominatimCall = 0
+async function nominatimFetch(url) {
+    const now = Date.now()
+    const diff = now - lastNominatimCall
+    if (diff < 1000) {
+        await new Promise((r) => setTimeout(r, 1000 - diff))
+    }
+    lastNominatimCall = Date.now()
+    const res = await fetch(url, {
+        headers: { 'User-Agent': 'FoodRedistributionApp/1.0' },
+    })
+    if (!res.ok) throw new Error('Geocoding request failed')
+    return res.json()
 }
 
-const DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 } // India center
-const DEFAULT_ZOOM = 5
+/* ─── Extract city from Nominatim address object ─── */
+function extractCity(addressObj) {
+    if (!addressObj) return ''
+    return (
+        addressObj.city ||
+        addressObj.town ||
+        addressObj.village ||
+        addressObj.county ||
+        addressObj.state_district ||
+        addressObj.state ||
+        ''
+    )
+}
+
+/* ─── Reverse geocode helper ─── */
+async function reverseGeocode(lat, lng) {
+    const url = `${NOMINATIM_BASE}/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`
+    const data = await nominatimFetch(url)
+    return {
+        address: data.display_name || '',
+        city: extractCity(data.address),
+    }
+}
+
+/* ─── Forward geocode (search) helper ─── */
+async function forwardGeocode(query) {
+    const url = `${NOMINATIM_BASE}/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1&countrycodes=in`
+    return nominatimFetch(url)
+}
+
+/* ────────────────────────────────────────────────
+   MapClickHandler — sub-component for click events
+   ──────────────────────────────────────────────── */
+function MapClickHandler({ onClick }) {
+    useMapEvents({
+        click(e) {
+            onClick(e.latlng)
+        },
+    })
+    return null
+}
+
+/* ────────────────────────────────────────────────
+   MapFlyTo — imperatively fly the map to a position
+   Uses a counter-based key to trigger re-fly
+   ──────────────────────────────────────────────── */
+function MapFlyTo({ lat, lng, zoom, flyKey }) {
+    const map = useMap()
+    const lastFlyRef = useRef(null)
+
+    useEffect(() => {
+        if (lat != null && lng != null && flyKey !== lastFlyRef.current) {
+            lastFlyRef.current = flyKey
+            map.flyTo([lat, lng], zoom, { duration: 1.2 })
+        }
+    }, [lat, lng, zoom, flyKey, map])
+
+    return null
+}
+
+/* ────────────────────────────────────────────────
+   DraggableMarker — draggable marker sub-component
+   ──────────────────────────────────────────────── */
+function DraggableMarker({ position, onDragEnd }) {
+    const markerRef = useRef(null)
+
+    const eventHandlers = useMemo(
+        () => ({
+            dragend() {
+                const marker = markerRef.current
+                if (marker) {
+                    onDragEnd(marker.getLatLng())
+                }
+            },
+        }),
+        [onDragEnd]
+    )
+
+    return (
+        <Marker
+            draggable
+            eventHandlers={eventHandlers}
+            position={position}
+            ref={markerRef}
+        />
+    )
+}
 
 /**
- * LocationPicker — Google Places Autocomplete + Interactive Map + Radius Circle
+ * LocationPicker — OpenStreetMap + Leaflet + Nominatim
  *
- * Props:
+ * Props (same interface as previous Google Maps version):
  * - address, onAddressChange
- * - city, onCityChange
- * - lat, lng, onCoordsChange
+ * - onCityChange
+ * - onCoordsChange(lat, lng)
  * - showRadius (boolean) — for NGO only
  * - radius (km), onRadiusChange
  */
@@ -45,206 +139,330 @@ export default function LocationPicker({
     radius = 10,
     onRadiusChange,
 }) {
-    const autocompleteInputRef = useRef(null)
-    const autocompleteRef = useRef(null)
-    const mapRef = useRef(null)
-
     const [markerPos, setMarkerPos] = useState(null)
-    const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER)
-    const [mapZoom, setMapZoom] = useState(DEFAULT_ZOOM)
-    const [isMapVisible, setIsMapVisible] = useState(false)
+    const [flyTarget, setFlyTarget] = useState({ lat: null, lng: null, zoom: 15, key: 0 })
+    const [searchQuery, setSearchQuery] = useState('')
+    const [searchResults, setSearchResults] = useState([])
+    const [isSearching, setIsSearching] = useState(false)
+    const [searchError, setSearchError] = useState('')
+    const [showResults, setShowResults] = useState(false)
+    const [isGeocoding, setIsGeocoding] = useState(false)
 
-    const { isLoaded, loadError } = useJsApiLoader({
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
-        libraries: LIBRARIES,
-    })
+    const searchTimeoutRef = useRef(null)
+    const resultsRef = useRef(null)
+    const flyKeyRef = useRef(0)
 
-    // Initialize Autocomplete
+    /* ── Close dropdown when clicking outside ── */
     useEffect(() => {
-        if (!isLoaded || !autocompleteInputRef.current) return
-
-        const autocomplete = new window.google.maps.places.Autocomplete(
-            autocompleteInputRef.current,
-            {
-                types: ['geocode', 'establishment'],
-                componentRestrictions: { country: 'in' },
-                fields: ['formatted_address', 'geometry', 'address_components'],
+        function handleClickOutside(e) {
+            if (resultsRef.current && !resultsRef.current.contains(e.target)) {
+                setShowResults(false)
             }
-        )
-
-        autocomplete.addListener('place_changed', () => {
-            const place = autocomplete.getPlace()
-
-            if (!place.geometry?.location) return
-
-            const lat = place.geometry.location.lat()
-            const lng = place.geometry.location.lng()
-            const formattedAddress = place.formatted_address || ''
-
-            // Extract city from address components
-            let city = ''
-            if (place.address_components) {
-                for (const component of place.address_components) {
-                    if (component.types.includes('locality')) {
-                        city = component.long_name
-                        break
-                    }
-                    if (component.types.includes('administrative_area_level_2')) {
-                        city = component.long_name
-                    }
-                }
-            }
-
-            onAddressChange?.(formattedAddress)
-            onCityChange?.(city)
-            onCoordsChange?.(lat, lng)
-
-            setMarkerPos({ lat, lng })
-            setMapCenter({ lat, lng })
-            setMapZoom(15)
-            setIsMapVisible(true)
-        })
-
-        autocompleteRef.current = autocomplete
-
-        return () => {
-            window.google.maps.event.clearInstanceListeners(autocomplete)
         }
-    }, [isLoaded, onAddressChange, onCityChange, onCoordsChange])
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
 
-    // Marker drag end handler
-    const handleMarkerDragEnd = useCallback(
-        (e) => {
-            const lat = e.latLng.lat()
-            const lng = e.latLng.lng()
-
-            setMarkerPos({ lat, lng })
+    /* ── Handle setting a location (from click, drag, or search) ── */
+    const handleSetLocation = useCallback(
+        async (lat, lng, skipReverseGeocode = false, addressData = null) => {
+            setMarkerPos([lat, lng])
+            flyKeyRef.current += 1
+            setFlyTarget({ lat, lng, zoom: 15, key: flyKeyRef.current })
             onCoordsChange?.(lat, lng)
 
-            // Reverse geocode to update address
-            if (window.google) {
-                const geocoder = new window.google.maps.Geocoder()
-                geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-                    if (status === 'OK' && results[0]) {
-                        onAddressChange?.(results[0].formatted_address)
-
-                        // Extract city
-                        let city = ''
-                        for (const comp of results[0].address_components) {
-                            if (comp.types.includes('locality')) {
-                                city = comp.long_name
-                                break
-                            }
-                            if (comp.types.includes('administrative_area_level_2')) {
-                                city = comp.long_name
-                            }
-                        }
-                        onCityChange?.(city)
-                    }
-                })
+            if (skipReverseGeocode && addressData) {
+                onAddressChange?.(addressData.address)
+                onCityChange?.(addressData.city)
+            } else {
+                setIsGeocoding(true)
+                try {
+                    const result = await reverseGeocode(lat, lng)
+                    onAddressChange?.(result.address)
+                    onCityChange?.(result.city)
+                } catch {
+                    // Silently fail; coordinates are still set
+                } finally {
+                    setIsGeocoding(false)
+                }
             }
         },
         [onAddressChange, onCityChange, onCoordsChange]
     )
 
-    const onMapLoad = useCallback((map) => {
-        mapRef.current = map
+    /* ── Map click handler ── */
+    const handleMapClick = useCallback(
+        (latlng) => {
+            handleSetLocation(latlng.lat, latlng.lng)
+        },
+        [handleSetLocation]
+    )
+
+    /* ── Marker drag end ── */
+    const handleMarkerDragEnd = useCallback(
+        (latlng) => {
+            handleSetLocation(latlng.lat, latlng.lng)
+        },
+        [handleSetLocation]
+    )
+
+    /* ── Search with debounce ── */
+    const handleSearchChange = useCallback((e) => {
+        const value = e.target.value
+        setSearchQuery(value)
+        setSearchError('')
+
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+
+        if (value.trim().length < 3) {
+            setSearchResults([])
+            setShowResults(false)
+            return
+        }
+
+        searchTimeoutRef.current = setTimeout(async () => {
+            setIsSearching(true)
+            try {
+                const results = await forwardGeocode(value)
+                setSearchResults(results)
+                setShowResults(results.length > 0)
+                if (results.length === 0) {
+                    setSearchError('No locations found. Try a different search.')
+                }
+            } catch {
+                setSearchError('Search failed. Please try again.')
+                setSearchResults([])
+            } finally {
+                setIsSearching(false)
+            }
+        }, 600)
     }, [])
 
-    if (loadError) {
-        return (
-            <div className="auth-location-error">
-                <p>Failed to load Google Maps. Check your API key.</p>
-            </div>
-        )
-    }
+    /* ── Search on Enter key ── */
+    const handleSearchKeyDown = useCallback(
+        async (e) => {
+            if (e.key !== 'Enter') return
+            e.preventDefault()
 
-    if (!isLoaded) {
-        return (
-            <div className="auth-location-loading">
-                <div className="auth-location-loading__spinner" />
-                <span>Loading Maps…</span>
-            </div>
-        )
-    }
+            if (searchQuery.trim().length < 2) return
+
+            if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+
+            setIsSearching(true)
+            setSearchError('')
+            try {
+                const results = await forwardGeocode(searchQuery)
+                setSearchResults(results)
+                setShowResults(results.length > 0)
+                if (results.length === 0) {
+                    setSearchError('No locations found. Try a different search.')
+                } else {
+                    // Auto-select first result
+                    const first = results[0]
+                    const lat = parseFloat(first.lat)
+                    const lng = parseFloat(first.lon)
+                    handleSetLocation(lat, lng, true, {
+                        address: first.display_name,
+                        city: extractCity(first.address),
+                    })
+                    setShowResults(false)
+                    setSearchQuery(first.display_name)
+                }
+            } catch {
+                setSearchError('Search failed. Please try again.')
+            } finally {
+                setIsSearching(false)
+            }
+        },
+        [searchQuery, handleSetLocation]
+    )
+
+    /* ── Select a search result ── */
+    const handleSelectResult = useCallback(
+        (result) => {
+            const lat = parseFloat(result.lat)
+            const lng = parseFloat(result.lon)
+            handleSetLocation(lat, lng, true, {
+                address: result.display_name,
+                city: extractCity(result.address),
+            })
+            setSearchQuery(result.display_name)
+            setShowResults(false)
+            setSearchResults([])
+        },
+        [handleSetLocation]
+    )
+
+    /* ── Cleanup timeout on unmount ── */
+    useEffect(() => {
+        return () => {
+            if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+        }
+    }, [])
+
+    const mapHeight = showRadius ? 450 : 400
 
     return (
         <div className="auth-location-picker">
-            {/* Autocomplete Search */}
-            <div className="auth-input-group auth-input-group--search">
-                <label htmlFor="address-autocomplete">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6, verticalAlign: 'middle', opacity: 0.5 }}>
+            {/* Search bar */}
+            <div className="auth-input-group auth-input-group--search" ref={resultsRef}>
+                <label htmlFor="address-search">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ marginRight: 6, verticalAlign: 'middle', opacity: 0.5 }}
+                    >
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                         <circle cx="12" cy="10" r="3" />
                     </svg>
                     Address
                 </label>
-                <input
-                    ref={autocompleteInputRef}
-                    type="text"
-                    id="address-autocomplete"
-                    placeholder="Start typing your address…"
-                    defaultValue={address}
-                    autoComplete="off"
-                />
+                <div style={{ position: 'relative' }}>
+                    <input
+                        type="text"
+                        id="address-search"
+                        placeholder="Search for address… (e.g. Solapur, Maharashtra)"
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        onKeyDown={handleSearchKeyDown}
+                        autoComplete="off"
+                    />
+                    {isSearching && (
+                        <div className="auth-search-spinner">
+                            <div className="auth-location-loading__spinner" />
+                        </div>
+                    )}
+
+                    {/* Search results dropdown */}
+                    {showResults && searchResults.length > 0 && (
+                        <div className="auth-search-results">
+                            {searchResults.map((result, idx) => (
+                                <button
+                                    key={`${result.place_id}-${idx}`}
+                                    type="button"
+                                    className="auth-search-result-item"
+                                    onClick={() => handleSelectResult(result)}
+                                >
+                                    <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        style={{ flexShrink: 0, opacity: 0.4 }}
+                                    >
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                        <circle cx="12" cy="10" r="3" />
+                                    </svg>
+                                    <span>{result.display_name}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
                 <span className="auth-input-line" />
+
+                {searchError && (
+                    <div className="auth-search-error">{searchError}</div>
+                )}
             </div>
 
             {/* Address confirmation */}
             {address && (
                 <div className="auth-address-confirmation">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tundora)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="var(--tundora)"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
                         <polyline points="20 6 9 17 4 12" />
                     </svg>
                     <span>{address}</span>
+                    {isGeocoding && <span className="auth-geocoding-tag">Updating…</span>}
                 </div>
             )}
 
-            {/* Interactive Map */}
-            {isMapVisible && markerPos && (
-                <div className="auth-map-container">
-                    <GoogleMap
-                        mapContainerClassName="auth-map"
-                        center={mapCenter}
-                        zoom={mapZoom}
-                        options={MAP_OPTIONS}
-                        onLoad={onMapLoad}
-                    >
-                        <Marker
+            {/* Interactive Map — always visible, centered on Solapur by default */}
+            <div className="auth-map-container">
+                <MapContainer
+                    center={DEFAULT_CENTER}
+                    zoom={DEFAULT_ZOOM}
+                    className="auth-map"
+                    style={{ height: `${mapHeight}px`, width: '100%' }}
+                    scrollWheelZoom={true}
+                >
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+
+                    <MapClickHandler onClick={handleMapClick} />
+
+                    <MapFlyTo
+                        lat={flyTarget.lat}
+                        lng={flyTarget.lng}
+                        zoom={flyTarget.zoom}
+                        flyKey={flyTarget.key}
+                    />
+
+                    {markerPos && (
+                        <DraggableMarker
                             position={markerPos}
-                            draggable
                             onDragEnd={handleMarkerDragEnd}
-                            animation={window.google.maps.Animation.DROP}
                         />
+                    )}
 
-                        {showRadius && (
-                            <Circle
-                                center={markerPos}
-                                radius={radius * 1000}
-                                options={{
-                                    strokeColor: '#443c3c',
-                                    strokeOpacity: 0.3,
-                                    strokeWeight: 2,
-                                    fillColor: '#443c3c',
-                                    fillOpacity: 0.08,
-                                }}
-                            />
-                        )}
-                    </GoogleMap>
+                    {showRadius && markerPos && (
+                        <Circle
+                            center={markerPos}
+                            radius={radius * 1000}
+                            pathOptions={{
+                                color: '#443c3c',
+                                weight: 2,
+                                opacity: 0.3,
+                                fillColor: '#443c3c',
+                                fillOpacity: 0.08,
+                            }}
+                        />
+                    )}
+                </MapContainer>
 
-                    <div className="auth-map-hint">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="12" y1="16" x2="12" y2="12" />
-                            <line x1="12" y1="8" x2="12.01" y2="8" />
-                        </svg>
-                        Drag the marker to fine-tune your location
-                    </div>
+                <div className="auth-map-hint">
+                    <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ opacity: 0.5 }}
+                    >
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="16" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    Click on the map or drag the marker to set your location
                 </div>
-            )}
+            </div>
 
             {/* Radius Slider (NGO only) */}
-            {showRadius && isMapVisible && (
+            {showRadius && (
                 <div className="auth-radius-control">
                     <div className="auth-radius-control__header">
                         <label htmlFor="service-radius">Service Radius</label>
@@ -267,6 +485,12 @@ export default function LocationPicker({
                     </div>
                 </div>
             )}
+
+            {/* Hidden inputs for form submission */}
+            <input type="hidden" name="address" value={address || ''} />
+            <input type="hidden" name="latitude" value={markerPos ? markerPos[0] : ''} />
+            <input type="hidden" name="longitude" value={markerPos ? markerPos[1] : ''} />
+            {showRadius && <input type="hidden" name="service_radius_km" value={radius} />}
         </div>
     )
 }

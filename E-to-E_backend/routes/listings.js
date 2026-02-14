@@ -106,7 +106,7 @@ router.get('/', authenticateUser, async (req, res) => {
 
       if (ngo) {
         const result = await getAvailableListingsForNGO(ngo.ngo_id);
-        
+
         if (!result.success) {
           return res.status(500).json({
             error: 'Failed to fetch listings',
@@ -126,13 +126,10 @@ router.get('/', authenticateUser, async (req, res) => {
       .from('food_listings')
       .select(`
         *,
-        donors!inner (
+        donors (
           donor_id,
           city,
-          profiles (
-            organization_name,
-            phone
-          )
+          address
         )
       `);
 
@@ -142,24 +139,21 @@ router.get('/', authenticateUser, async (req, res) => {
       query = query.in('status', ['open', 'in_discussion']);
     }
 
-    if (city) {
-      query = query.eq('donors.city', city);
-    }
-
     query = query.order('created_at', { ascending: false });
 
     const { data: listings, error } = await query;
 
     if (error) {
+      console.error('Listings query error:', error);
       return res.status(500).json({
-        error: 'Failed to fetch listings',
+        error: 'Unable to load food listings at this time. Please try again.',
         message: error.message
       });
     }
 
     res.json({
-      listings,
-      count: listings.length
+      listings: listings || [],
+      count: (listings || []).length
     });
 
   } catch (error) {
@@ -232,10 +226,7 @@ router.get('/:listing_id', async (req, res) => {
         donors (
           donor_id,
           city,
-          profiles (
-            organization_name,
-            phone
-          )
+          address
         )
       `)
       .eq('listing_id', listing_id)

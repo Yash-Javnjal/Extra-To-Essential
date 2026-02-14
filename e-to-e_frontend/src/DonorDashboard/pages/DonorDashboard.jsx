@@ -52,10 +52,21 @@ export default function DonorDashboard() {
             if (listingsRes.status === 'fulfilled') setListings(listingsRes.value.listings || [])
             if (impactRes.status === 'fulfilled') setImpact(impactRes.value.impact)
 
+            const friendlyError = (reason) => {
+                const msg = reason?.message || reason?.error || 'Unknown error'
+                if (msg.includes('stack depth') || msg.includes('recursion'))
+                    return 'Temporary server issue. Data will refresh shortly.'
+                if (msg.includes('not found'))
+                    return 'Profile data is unavailable.'
+                if (msg.includes('network') || msg.includes('fetch'))
+                    return 'Connection issue. Please check your internet.'
+                return msg.length < 80 ? msg : 'Something went wrong loading data.'
+            }
+
             const newErrors = {}
-            if (userRes.status === 'rejected') newErrors.user = userRes.reason?.message
+            if (userRes.status === 'rejected') newErrors.user = friendlyError(userRes.reason)
             if (listingsRes.status === 'rejected')
-                newErrors.listings = listingsRes.reason?.message
+                newErrors.listings = friendlyError(listingsRes.reason)
             setErrors(newErrors)
         } catch (err) {
             console.error('Dashboard data fetch error:', err)
@@ -110,15 +121,15 @@ export default function DonorDashboard() {
 
     /* ── Derived data ── */
     const activeListings = listings.filter(
-        (l) => !['delivered', 'cancelled', 'expired'].includes(l.status)
+        (l) => !['completed', 'expired'].includes(l.status)
     )
-    const completedListings = listings.filter((l) => l.status === 'delivered')
+    const completedListings = listings.filter((l) => l.status === 'completed')
 
     const stats = {
         total: listings.length,
         active: activeListings.length,
         completed: completedListings.length,
-        ngos: impact?.total_ngos_served ?? 0,
+        ngos: impact?.listing_count ?? 0,
     }
 
     /* ── View heading config ── */

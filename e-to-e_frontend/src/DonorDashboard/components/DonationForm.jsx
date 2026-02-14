@@ -147,7 +147,25 @@ export default function DonationForm({ onSuccess }) {
 
             setTimeout(() => setSuccess(false), 4000)
         } catch (err) {
-            setError(err.message || 'Failed to create donation. Please try again.')
+            // Map technical error messages to user-friendly ones
+            const rawMsg = err?.message || err?.error || ''
+            let userMsg = 'Something went wrong while creating your donation. Please try again.'
+
+            if (rawMsg.includes('stack depth') || rawMsg.includes('recursion')) {
+                userMsg = 'We are experiencing a temporary server issue. Please try again in a moment.'
+            } else if (rawMsg.includes('Donor profile not found')) {
+                userMsg = 'Your donor profile was not found. Please log out and register again.'
+            } else if (rawMsg.includes('Missing required fields')) {
+                userMsg = 'Please fill in all required fields before submitting.'
+            } else if (rawMsg.includes('Failed to create listing')) {
+                userMsg = 'Could not create your donation listing. Please check your details and try again.'
+            } else if (rawMsg.includes('network') || rawMsg.includes('fetch')) {
+                userMsg = 'Unable to reach the server. Please check your internet connection.'
+            } else if (rawMsg && rawMsg.length < 100) {
+                userMsg = rawMsg
+            }
+
+            setError(userMsg)
         } finally {
             setSubmitting(false)
         }

@@ -5,11 +5,12 @@ const { supabaseAdmin } = require('../config/supabaseClient');
  * Send notification via Firebase Cloud Messaging
  */
 const sendNotification = async (phoneNumber, messageType, messageBody, additionalData = {}) => {
+  let notificationLogId = null;
   try {
     // Firebase Cloud Messaging doesn't send SMS directly
     // This is a placeholder for push notifications
     // For actual SMS, integrate Twilio or similar service
-    
+
     // Log notification attempt
     const { data: notificationLog, error: logError } = await supabaseAdmin
       .from('notification_logs')
@@ -27,17 +28,7 @@ const sendNotification = async (phoneNumber, messageType, messageBody, additiona
       throw logError;
     }
 
-    // For push notifications (if you have FCM tokens stored)
-    // const message = {
-    //   notification: {
-    //     title: getNotificationTitle(messageType),
-    //     body: messageBody
-    //   },
-    //   data: additionalData,
-    //   token: fcmToken
-    // };
-    // 
-    // const response = await messaging.send(message);
+    notificationLogId = notificationLog?.notification_id;
 
     // Update log with success
     await supabaseAdmin
@@ -46,28 +37,28 @@ const sendNotification = async (phoneNumber, messageType, messageBody, additiona
         delivery_status: 'sent',
         delivered_at: new Date().toISOString()
       })
-      .eq('notification_id', notificationLog.notification_id);
+      .eq('notification_id', notificationLogId);
 
     console.log(`Notification sent to ${phoneNumber}: ${messageType}`);
-    
+
     return {
       success: true,
-      notificationId: notificationLog.notification_id,
+      notificationId: notificationLogId,
       message: 'Notification sent successfully'
     };
 
   } catch (error) {
     console.error('Notification error:', error);
-    
+
     // Log failure
-    if (notificationLog) {
+    if (notificationLogId) {
       await supabaseAdmin
         .from('notification_logs')
         .update({
           delivery_status: 'failed',
           error_message: error.message
         })
-        .eq('notification_id', notificationLog.notification_id);
+        .eq('notification_id', notificationLogId);
     }
 
     return {
@@ -103,7 +94,7 @@ const sendDeliveryAlert = async (ngoPhone, volunteerName, deliveryStatus) => {
     'delivered': `✨ ${volunteerName} has successfully delivered the donation!`,
     'failed': `❌ Delivery by ${volunteerName} encountered an issue.`
   };
-  
+
   const message = statusMessages[deliveryStatus] || 'Delivery status updated.';
   return sendNotification(ngoPhone, 'delivery_alert', message);
 };
@@ -137,7 +128,7 @@ const sendNewListingAlert = async (ngoPhone, foodType, quantity, distance) => {
  */
 const sendBulkNotifications = async (notifications) => {
   const results = await Promise.allSettled(
-    notifications.map(notif => 
+    notifications.map(notif =>
       sendNotification(notif.phone, notif.type, notif.message, notif.data)
     )
   );

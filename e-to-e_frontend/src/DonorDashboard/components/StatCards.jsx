@@ -6,7 +6,7 @@ const STATS_CONFIG = [
     { key: 'total', label: 'Total Donations', icon: '◆' },
     { key: 'active', label: 'Active Pickups', icon: '↗' },
     { key: 'completed', label: 'Completed', icon: '✓' },
-    { key: 'ngos', label: 'NGOs Served', icon: '◎' },
+    { key: 'ngos', label: 'Deliveries', icon: '◎' },
 ]
 
 export default function StatCards({ stats, loading }) {

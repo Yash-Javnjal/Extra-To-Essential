@@ -117,7 +117,7 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle }, ref) {
                     navigate('/') // admin dashboard not built yet
                     break
                 case 'ngo':
-                    navigate('/') // ngo dashboard not built yet
+                    navigate('/ngo-dashboard')
                     break
                 case 'donor':
                     navigate('/donor-dashboard')
@@ -412,7 +412,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 longitude: ngoLng,
                 service_radius_km: serviceRadius,
             })
-            navigate('/') // ngo dashboard not built yet
+            navigate('/ngo-dashboard')
         } catch (err) {
             setError(err.message || 'Failed to create NGO profile.')
         } finally {

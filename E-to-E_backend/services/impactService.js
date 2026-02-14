@@ -274,26 +274,47 @@ const getDonorImpact = async (donorId) => {
  */
 const getNGOImpact = async (ngoId) => {
   try {
+    // Step 1: Get all listing IDs that this NGO has claimed
+    const { data: claims, error: claimsError } = await supabaseAdmin
+      .from('ngo_claims')
+      .select('listing_id')
+      .eq('ngo_id', ngoId);
+
+    if (claimsError) throw claimsError;
+
+    if (!claims || claims.length === 0) {
+      return {
+        success: true,
+        impact: {
+          total_meals: 0,
+          total_food_kg: 0,
+          total_co2_kg: 0,
+          total_value: 0,
+          delivery_count: 0,
+          details: []
+        }
+      };
+    }
+
+    const listingIds = claims.map(c => c.listing_id);
+
+    // Step 2: Get impact metrics for those listings
     const { data, error } = await supabaseAdmin
       .from('impact_metrics')
       .select(`
         *,
-        food_listings!inner (
+        food_listings (
           listing_id,
           food_type,
           quantity_kg
-        ),
-        food_listings.ngo_claims!inner (
-          ngo_id,
-          acceptance_time
         )
       `)
-      .eq('food_listings.ngo_claims.ngo_id', ngoId);
+      .in('listing_id', listingIds);
 
     if (error) throw error;
 
     // Aggregate metrics
-    const totalImpact = data.reduce((acc, metric) => ({
+    const totalImpact = (data || []).reduce((acc, metric) => ({
       total_meals: acc.total_meals + (metric.meals_served || 0),
       total_food_kg: acc.total_food_kg + (parseFloat(metric.food_saved_kg) || 0),
       total_co2_kg: acc.total_co2_kg + (parseFloat(metric.co2_emissions_reduced_kg) || 0),
@@ -311,7 +332,7 @@ const getNGOImpact = async (ngoId) => {
       success: true,
       impact: {
         ...totalImpact,
-        details: data
+        details: data || []
       }
     };
   } catch (error) {

@@ -45,10 +45,10 @@ export default function ProfileSection({ user, donorProfile, impact }) {
     ]
 
     const impactStats = [
-        { label: 'Total Donations', value: impact?.total_donations ?? '—' },
+        { label: 'Total Donations', value: impact?.listing_count ?? '—' },
         { label: 'Meals Shared', value: impact?.total_meals ?? '—' },
-        { label: 'NGOs Served', value: impact?.total_ngos_served ?? '—' },
-        { label: 'Food Saved (kg)', value: impact?.total_quantity_kg ? `${impact.total_quantity_kg} kg` : '—' },
+        { label: 'CO₂ Reduced', value: impact?.total_co2_kg ? `${impact.total_co2_kg.toFixed(1)} kg` : '—' },
+        { label: 'Food Saved (kg)', value: impact?.total_food_kg ? `${impact.total_food_kg} kg` : '—' },
     ]
 
     return (

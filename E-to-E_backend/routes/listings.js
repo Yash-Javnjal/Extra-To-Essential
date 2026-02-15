@@ -4,7 +4,7 @@ const { supabaseAdmin } = require('../config/supabaseClient');
 const { authenticateUser } = require('../middleware/authMiddleware');
 const { donorOnly, ngoOnly } = require('../middleware/roleGuards');
 const { getAvailableListingsForNGO } = require('../services/geoMatchService');
-const { notifyNearbyNGOs } = require('../services/geoMatchService');
+const { notifyNearbyNGOs, notifySpecificNGO } = require('../services/geoMatchService');
 
 /**
  * POST /api/listings
@@ -20,6 +20,7 @@ router.post('/', authenticateUser, donorOnly, async (req, res) => {
       pickup_address,
       latitude,
       longitude,
+      assigned_ngo_id,
     } = req.body;
 
     // Validation
@@ -84,7 +85,8 @@ router.post('/', authenticateUser, donorOnly, async (req, res) => {
         latitude,
         longitude,
         status: 'open',
-        is_locked: false
+        is_locked: false,
+        assigned_ngo_id: assigned_ngo_id || null
       })
       .select()
       .single();
@@ -103,7 +105,11 @@ router.post('/', authenticateUser, donorOnly, async (req, res) => {
     }
 
     // Notify nearby NGOs asynchronously
-    notifyNearbyNGOs(listing.listing_id).catch(err => {
+    const notifyPromise = assigned_ngo_id
+      ? notifySpecificNGO(listing.listing_id, assigned_ngo_id)
+      : notifyNearbyNGOs(listing.listing_id);
+
+    notifyPromise.catch(err => {
       console.error('Failed to notify NGOs:', err);
     });
 
@@ -171,10 +177,18 @@ router.get('/', authenticateUser, async (req, res) => {
         )
       `);
 
-    if (status) {
-      query = query.eq('status', status);
+    if (req.user.role === 'admin') {
+      // Admin sees everything by default unless searching for specific status
+      if (status) {
+        query = query.eq('status', status);
+      }
     } else {
-      query = query.in('status', ['open', 'in_discussion']);
+      // Donors/others only see open/active listings by default
+      if (status) {
+        query = query.eq('status', status);
+      } else {
+        query = query.in('status', ['open', 'in_discussion']);
+      }
     }
 
     query = query.order('created_at', { ascending: false });

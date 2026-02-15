@@ -73,6 +73,7 @@ const getAvailableListingsForNGO = async (ngoId) => {
       .in('status', ['open', 'in_discussion'])
       .eq('is_locked', false)
       .gt('expiry_time', new Date().toISOString())
+      .or(`assigned_ngo_id.is.null,assigned_ngo_id.eq.${ngoId}`)
       .order('created_at', { ascending: false });
 
     if (listError) throw listError;
@@ -299,6 +300,65 @@ const notifyNearbyNGOs = async (listingId) => {
   }
 };
 
+/**
+ * Notify a specific NGO about a new listing
+ */
+const notifySpecificNGO = async (listingId, ngoId) => {
+  try {
+    // 1. Get the NGO's phone number
+    const { data: ngo, error: ngoError } = await supabaseAdmin
+      .from('ngos')
+      .select(`
+        ngo_name,
+        profiles (
+          phone
+        )
+      `)
+      .eq('ngo_id', ngoId)
+      .single();
+
+    if (ngoError || !ngo) {
+      throw new Error('Assigned NGO not found');
+    }
+
+    // 2. Get listing details
+    const { data: listing, error: listingError } = await supabaseAdmin
+      .from('food_listings')
+      .select('food_type, quantity_kg, donor_id, donors(profiles(full_name, organization_name))')
+      .eq('listing_id', listingId)
+      .single();
+
+    if (listingError) throw listingError;
+
+    const donorName = listing.donors?.profiles?.organization_name || listing.donors?.profiles?.full_name || 'A donor';
+
+    // 3. Send notification
+    const { sendNewListingAlert } = require('./notificationService');
+    const notification = {
+      phone: ngo.profiles.phone,
+      type: 'direct_assignment',
+      message: `${donorName} has assigned a donation to you: ${listing.quantity_kg} kg of ${listing.food_type}.`,
+      data: { listingId }
+    };
+
+    const { sendBulkNotifications } = require('./notificationService');
+    const result = await sendBulkNotifications([notification]);
+
+    return {
+      success: true,
+      notified: result.successful,
+      failed: result.failed
+    };
+
+  } catch (error) {
+    console.error('Error notifying specific NGO:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
 module.exports = {
   matchListingToNGOs,
   getAvailableListingsForNGO,
@@ -306,5 +366,6 @@ module.exports = {
   findNearestVolunteers,
   calculateRouteDistance,
   getListingsByCity,
-  notifyNearbyNGOs
+  notifyNearbyNGOs,
+  notifySpecificNGO
 };

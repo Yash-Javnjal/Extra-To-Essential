@@ -10,7 +10,7 @@ const Navbar = () => {
     const navRef = useRef(null)
     const logoRef = useRef(null)
     const linksRef = useRef(null)
-    const { isAuthenticated, user, getDashboardPath } = useAuth()
+    const { isAuthenticated, user, getDashboardPath, logout } = useAuth()
 
     useEffect(() => {
         const handleScroll = () => {
@@ -89,9 +89,21 @@ const Navbar = () => {
                 </div>
 
                 {isAuthenticated && user ? (
-                    <Link to={getDashboardPath(user.role)} className="nav__cta btn btn--primary">
-                        Dashboard
-                    </Link>
+                    <>
+                        <Link to={getDashboardPath(user.role)} className="nav__cta btn btn--primary">
+                            Dashboard
+                        </Link>
+                        <button
+                            onClick={() => {
+                                logout();
+                                setMenuOpen(false);
+                            }}
+                            className="nav__cta btn btn--secondary"
+                            style={{ marginLeft: '0.5rem' }}
+                        >
+                            Logout
+                        </button>
+                    </>
                 ) : (
                     <Link to="/login" className="nav__cta btn btn--primary">
                         Join Us

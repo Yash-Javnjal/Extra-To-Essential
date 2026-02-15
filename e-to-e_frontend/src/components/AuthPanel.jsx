@@ -363,11 +363,16 @@ export const RegisterForm = forwardRef(function RegisterForm(
                     password,
                     phone,
                     role,
-                    organization_name: organizationName || null,
+                    organization_name: null, // Admin doesn't need organization name
                 })
                 setRegisteredUserId(data.user?.id)
-                // Sync auth state so ProtectedRoute works
-                auth.login(data.user, data.session)
+
+                // Store session data temporarily
+                window.sessionStorage.setItem('pending_session', JSON.stringify({
+                    user: data.user,
+                    session: data.session
+                }))
+
                 // Navigate to step 2 to show success
                 setStep(2)
             } catch (err) {
@@ -390,8 +395,14 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 organization_name: organizationName || null,
             })
             setRegisteredUserId(data.user?.id)
-            // Sync auth state so ProtectedRoute works
-            auth.login(data.user, data.session)
+
+            // Store session data temporarily - DON'T login yet!
+            // We'll login after Step 2 is completed
+            window.sessionStorage.setItem('pending_session', JSON.stringify({
+                user: data.user,
+                session: data.session
+            }))
+
             setStep(2)
 
             // Animate step 2 entrance
@@ -445,6 +456,14 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 longitude: donorLng,
                 csr_participant: csrParticipant,
             })
+
+            // Now login the user with the pending session
+            const pendingSession = JSON.parse(window.sessionStorage.getItem('pending_session') || '{}')
+            if (pendingSession.user && pendingSession.session) {
+                auth.login(pendingSession.user, pendingSession.session)
+                window.sessionStorage.removeItem('pending_session')
+            }
+
             navigate(auth.getDashboardPath('donor'))
         } catch (err) {
             setError(err.message || 'Failed to create donor profile.')
@@ -479,6 +498,14 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 longitude: ngoLng,
                 service_radius_km: serviceRadius,
             })
+
+            // Now login the user with the pending session
+            const pendingSession = JSON.parse(window.sessionStorage.getItem('pending_session') || '{}')
+            if (pendingSession.user && pendingSession.session) {
+                auth.login(pendingSession.user, pendingSession.session)
+                window.sessionStorage.removeItem('pending_session')
+            }
+
             navigate(auth.getDashboardPath('ngo'))
         } catch (err) {
             setError(err.message || 'Failed to create NGO profile.')
@@ -491,11 +518,26 @@ export const RegisterForm = forwardRef(function RegisterForm(
     const handleVolunteerComplete = () => {
         // Volunteers don't need a separate profile table entry for now
         // They are already registered with role=volunteer in profiles
+
+        // Login the user with the pending session
+        const pendingSession = JSON.parse(window.sessionStorage.getItem('pending_session') || '{}')
+        if (pendingSession.user && pendingSession.session) {
+            auth.login(pendingSession.user, pendingSession.session)
+            window.sessionStorage.removeItem('pending_session')
+        }
+
         navigate(auth.getDashboardPath('volunteer'))
     }
 
     /* ── Step 2 — Admin (already registered, just redirect) ── */
     const handleAdminComplete = () => {
+        // Login the user with the pending session
+        const pendingSession = JSON.parse(window.sessionStorage.getItem('pending_session') || '{}')
+        if (pendingSession.user && pendingSession.session) {
+            auth.login(pendingSession.user, pendingSession.session)
+            window.sessionStorage.removeItem('pending_session')
+        }
+
         navigate(auth.getDashboardPath('admin'))
     }
 

@@ -30,15 +30,6 @@ const FOOD_TYPES = [
     'Other',
 ]
 
-const PACKAGING_TYPES = [
-    'Sealed Containers',
-    'Aluminium Foil',
-    'Plastic Wrap',
-    'Cardboard Box',
-    'Thermal Bag',
-    'None / Open',
-]
-
 /* ── MapPicker sub-component ── */
 function MapClickHandler({ onMapClick }) {
     useMapEvents({
@@ -54,12 +45,10 @@ export default function DonationForm({ onSuccess }) {
         food_type: '',
         quantity_kg: '',
         meal_equivalent: '',
-        packaging_type: '',
         expiry_time: '',
         pickup_address: '',
         latitude: null,
         longitude: null,
-        special_instructions: '',
     })
     const [markerPos, setMarkerPos] = useState(null)
     const [submitting, setSubmitting] = useState(false)
@@ -145,12 +134,10 @@ export default function DonationForm({ onSuccess }) {
                 food_type: '',
                 quantity_kg: '',
                 meal_equivalent: '',
-                packaging_type: '',
                 expiry_time: '',
                 pickup_address: '',
                 latitude: null,
                 longitude: null,
-                special_instructions: '',
             })
             setMarkerPos(null)
 
@@ -194,8 +181,14 @@ export default function DonationForm({ onSuccess }) {
                         id="food_type"
                         name="food_type"
                         className="dd-form-select"
-                        value={form.food_type}
-                        onChange={handleChange}
+                        value={form.food_type === 'Other' || FOOD_TYPES.includes(form.food_type) ? form.food_type : 'Other'}
+                        onChange={(e) => {
+                            if (e.target.value === 'Other') {
+                                setForm((prev) => ({ ...prev, food_type: '' }))
+                            } else {
+                                handleChange(e)
+                            }
+                        }}
                     >
                         <option value="">Select food type</option>
                         {FOOD_TYPES.map((t) => (
@@ -204,6 +197,19 @@ export default function DonationForm({ onSuccess }) {
                             </option>
                         ))}
                     </select>
+
+                    {/* Show text input if 'Other' is selected or custom value entered */}
+                    {(form.food_type === '' || (form.food_type && !FOOD_TYPES.includes(form.food_type))) && (
+                        <input
+                            type="text"
+                            name="food_type"
+                            className="dd-form-input"
+                            placeholder="Enter custom food type"
+                            value={form.food_type}
+                            onChange={handleChange}
+                            style={{ marginTop: '0.5rem' }}
+                        />
+                    )}
                 </div>
 
                 {/* Quantity */}
@@ -241,27 +247,6 @@ export default function DonationForm({ onSuccess }) {
                     />
                 </div>
 
-                {/* Packaging Type */}
-                <div className="dd-form-group">
-                    <label htmlFor="packaging_type" className="dd-form-label">
-                        Packaging Type
-                    </label>
-                    <select
-                        id="packaging_type"
-                        name="packaging_type"
-                        className="dd-form-select"
-                        value={form.packaging_type}
-                        onChange={handleChange}
-                    >
-                        <option value="">Select packaging</option>
-                        {PACKAGING_TYPES.map((t) => (
-                            <option key={t} value={t}>
-                                {t}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
                 {/* Expiry Time */}
                 <div className="dd-form-group">
                     <label htmlFor="expiry_time" className="dd-form-label">
@@ -273,22 +258,6 @@ export default function DonationForm({ onSuccess }) {
                         type="datetime-local"
                         className="dd-form-input"
                         value={form.expiry_time}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/* Special Instructions */}
-                <div className="dd-form-group dd-form-group--full">
-                    <label htmlFor="special_instructions" className="dd-form-label">
-                        Special Instructions
-                    </label>
-                    <textarea
-                        id="special_instructions"
-                        name="special_instructions"
-                        rows="3"
-                        className="dd-form-textarea"
-                        placeholder="Any notes about handling, allergies, etc."
-                        value={form.special_instructions}
                         onChange={handleChange}
                     />
                 </div>

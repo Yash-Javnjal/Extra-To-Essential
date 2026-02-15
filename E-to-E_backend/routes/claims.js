@@ -12,98 +12,121 @@ const { sendClaimAlert } = require('../services/notificationService');
 router.post('/', authenticateUser, ngoOnly, async (req, res) => {
   try {
     const { listing_id, pickup_scheduled_time, strategy_notes } = req.body;
+    console.log('[CLAIMS] POST /api/claims - Body:', JSON.stringify(req.body));
 
     if (!listing_id) {
-      return res.status(400).json({
-        error: 'Missing required field: listing_id'
-      });
+      return res.status(400).json({ error: 'Missing required field: listing_id' });
     }
 
     // Get ngo_id
-    const { data: ngo } = await supabaseAdmin
+    const { data: ngo, error: ngoErr } = await supabaseAdmin
       .from('ngos')
       .select('ngo_id, ngo_name')
       .eq('profile_id', req.user.id)
       .single();
 
-    if (!ngo) {
-      return res.status(404).json({
-        error: 'NGO profile not found',
-        message: 'Please create an NGO profile first'
-      });
+    if (ngoErr || !ngo) {
+      console.error('[CLAIMS] NGO lookup error:', ngoErr);
+      return res.status(404).json({ error: 'NGO profile not found' });
     }
+    console.log('[CLAIMS] NGO found:', ngo.ngo_id, ngo.ngo_name);
 
-    // Check if listing is available
+    // Get listing info (for notification later)
     const { data: listing } = await supabaseAdmin
       .from('food_listings')
       .select(`
-        *,
-        donors!inner (
-          profiles (
-            phone,
-            organization_name
-          )
-        )
+        listing_id, food_type, status, is_locked,
+        donors!inner ( profile_id, profiles ( phone, organization_name ) )
       `)
       .eq('listing_id', listing_id)
       .single();
 
     if (!listing) {
-      return res.status(404).json({
-        error: 'Listing not found'
-      });
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    console.log('[CLAIMS] Listing:', listing.listing_id, 'status:', listing.status, 'locked:', listing.is_locked);
+
+    if (['completed', 'expired'].includes(listing.status)) {
+      return res.status(400).json({ error: 'Listing is not available', current_status: listing.status });
     }
 
-    if (listing.is_locked) {
-      return res.status(409).json({
-        error: 'Listing already claimed by another NGO'
-      });
+    // ─── Try RPC function first (single DB call, no trigger issues) ───
+    const { data: rpcResult, error: rpcError } = await supabaseAdmin.rpc('claim_listing', {
+      p_listing_id: listing_id,
+      p_ngo_id: ngo.ngo_id,
+      p_pickup_scheduled_time: pickup_scheduled_time || null,
+      p_strategy_notes: strategy_notes || null
+    });
+
+    if (!rpcError && rpcResult && !rpcResult.error) {
+      console.log('[CLAIMS] RPC success! Claim:', rpcResult.claim_id);
+
+      // Send notification (non-blocking)
+      try {
+        const donorPhone = listing.donors?.profiles?.phone;
+        if (donorPhone) {
+          sendClaimAlert(donorPhone, ngo.ngo_name, listing.food_type).catch(() => { });
+        }
+      } catch (_) { }
+
+      return res.status(201).json({ message: 'Listing claimed successfully', claim: rpcResult });
     }
 
-    if (!['open', 'in_discussion'].includes(listing.status)) {
-      return res.status(400).json({
-        error: 'Listing is not available for claiming',
-        current_status: listing.status
-      });
-    }
+    // ─── Fallback: direct operations ───
+    const rpcMsg = rpcError?.message || rpcResult?.error || 'unknown';
+    console.log('[CLAIMS] RPC unavailable or failed:', rpcMsg, '— using fallback');
 
-    // Create claim (trigger will lock the listing)
-    const { data: claim, error } = await supabaseAdmin
+    // Step 1: Delete existing claims
+    const { error: delErr } = await supabaseAdmin.from('ngo_claims').delete().eq('listing_id', listing_id);
+    if (delErr) console.error('[CLAIMS] Delete claims error:', delErr.message);
+    else console.log('[CLAIMS] Old claims deleted');
+
+    // Step 2: Lock the listing directly (skip unlock→lock since we deleted claims)
+    const { error: lockErr } = await supabaseAdmin
+      .from('food_listings')
+      .update({ is_locked: true, status: 'claimed' })
+      .eq('listing_id', listing_id);
+
+    if (lockErr) {
+      console.error('[CLAIMS] Lock error:', lockErr);
+      return res.status(500).json({ error: 'Failed to lock listing', message: lockErr.message });
+    }
+    console.log('[CLAIMS] Listing locked');
+
+    // Step 3: Insert claim
+    const { data: claim, error: claimErr } = await supabaseAdmin
       .from('ngo_claims')
       .insert({
         listing_id,
         ngo_id: ngo.ngo_id,
-        pickup_scheduled_time,
-        strategy_notes,
+        pickup_scheduled_time: pickup_scheduled_time || null,
+        strategy_notes: strategy_notes || null,
         status: 'claimed'
       })
       .select()
       .single();
 
-    if (error) {
-      return res.status(500).json({
-        error: 'Failed to claim listing',
-        message: error.message
-      });
+    if (claimErr) {
+      console.error('[CLAIMS] Insert error:', claimErr);
+      // Rollback lock
+      await supabaseAdmin.from('food_listings').update({ is_locked: false, status: 'open' }).eq('listing_id', listing_id);
+      return res.status(500).json({ error: 'Failed to create claim', message: claimErr.message });
     }
+    console.log('[CLAIMS] Claim created:', claim.claim_id);
 
-    // Send notification to donor
-    const donorPhone = listing.donors.profiles.phone;
-    sendClaimAlert(donorPhone, ngo.ngo_name, listing.food_type).catch(err => {
-      console.error('Failed to send claim alert:', err);
-    });
+    // Notification (non-blocking)
+    try {
+      const donorPhone = listing.donors?.profiles?.phone;
+      if (donorPhone) {
+        sendClaimAlert(donorPhone, ngo.ngo_name, listing.food_type).catch(() => { });
+      }
+    } catch (_) { }
 
-    res.status(201).json({
-      message: 'Listing claimed successfully',
-      claim
-    });
+    return res.status(201).json({ message: 'Listing claimed successfully', claim });
 
   } catch (error) {
-    console.error('Claim listing error:', error);
-    res.status(500).json({
-      error: 'Failed to claim listing',
-      message: error.message
-    });
+    console.error('[CLAIMS] Unhandled error:', error);
+    res.status(500).json({ error: 'Failed to claim listing', message: error.message });
   }
 });
 

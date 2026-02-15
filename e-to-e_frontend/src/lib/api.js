@@ -28,10 +28,10 @@ async function apiFetch(endpoint, options = {}) {
 
 /* ─── Auth Endpoints ─── */
 
-export async function registerUser({ full_name, email, password, phone, role, organization_name }) {
+export async function registerUser({ full_name, email, password, phone, role, organization_name, accepted_terms, accepted_terms_timestamp }) {
     const data = await apiFetch('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ full_name, email, password, phone, role, organization_name }),
+        body: JSON.stringify({ full_name, email, password, phone, role, organization_name, accepted_terms, accepted_terms_timestamp }),
     })
 
     // Store tokens

@@ -15,7 +15,9 @@ router.post('/register', async (req, res) => {
       password,
       phone,
       role,
-      organization_name
+      organization_name,
+      accepted_terms,
+      accepted_terms_timestamp
     } = req.body;
 
     // Validation
@@ -23,6 +25,14 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({
         error: 'Missing required fields',
         required: ['full_name', 'email', 'password', 'phone', 'role']
+      });
+    }
+
+    // Validate Terms & Conditions (Security Requirement)
+    if (accepted_terms !== true) {
+      return res.status(400).json({
+        error: 'Terms not accepted',
+        message: 'You must accept the Terms & Conditions to register.'
       });
     }
 
@@ -65,7 +75,9 @@ router.post('/register', async (req, res) => {
         email,
         phone,
         role,
-        organization_name: organization_name || null
+        organization_name: organization_name || null,
+        accepted_terms: true,
+        accepted_terms_timestamp: accepted_terms_timestamp || new Date().toISOString()
       })
       .select()
       .single();

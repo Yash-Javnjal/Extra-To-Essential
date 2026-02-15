@@ -42,6 +42,37 @@ const EyeOffIcon = () => (
     </svg>
 )
 
+/* ─── Terms & Conditions Modal ─── */
+function TermsModal({ onClose, onAccept }) {
+    return (
+        <div className="auth-terms-overlay">
+            <div className="auth-terms-modal">
+                <div className="auth-terms-header">
+                    <h3>Terms & Conditions</h3>
+                    <button className="auth-terms-close" onClick={onClose} type="button">×</button>
+                </div>
+                <div className="auth-terms-content">
+                    <p>By registering on this platform, you acknowledge and agree to the following:</p>
+                    <ul>
+                        <li>This platform acts solely as a facilitator connecting food donors and NGOs.</li>
+                        <li>The platform does not prepare, cook, store, or distribute food.</li>
+                        <li>All food safety responsibility lies with the donor and receiving organization.</li>
+                        <li>The platform does not guarantee quality, safety, or suitability of donated food.</li>
+                        <li>In case of food poisoning, contamination, or any health issue arising from food donations, the platform shall not be held legally or financially responsible.</li>
+                        <li>Users participate at their own discretion and risk.</li>
+                    </ul>
+                    <p>By accepting these terms, you release the platform and its operators from liability related to food quality or consumption outcomes.</p>
+                </div>
+                <div className="auth-terms-footer">
+                    <button className="auth-terms-accept-btn" onClick={onAccept} type="button">
+                        I Accept
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 /* ─────────────────────────────────────────────
    LOGIN FORM
    ───────────────────────────────────────────── */
@@ -268,6 +299,10 @@ export const RegisterForm = forwardRef(function RegisterForm(
     const [organizationName, setOrganizationName] = useState('')
     const [role, setRole] = useState('donor')
 
+    /* Step 1 — Terms State */
+    const [acceptedTerms, setAcceptedTerms] = useState(false)
+    const [showTerms, setShowTerms] = useState(false)
+
     /* Step 2 — Donor fields */
     const [businessType, setBusinessType] = useState('')
     const [donorAddress, setDonorAddress] = useState('')
@@ -341,6 +376,11 @@ export const RegisterForm = forwardRef(function RegisterForm(
             return
         }
 
+        if (!acceptedTerms) {
+            setError('You must accept the Terms & Conditions to continue.')
+            return
+        }
+
         if (password !== confirmPassword) {
             setError('Passwords do not match.')
             return
@@ -364,6 +404,8 @@ export const RegisterForm = forwardRef(function RegisterForm(
                     phone,
                     role,
                     organization_name: null, // Admin doesn't need organization name
+                    accepted_terms: true,
+                    accepted_terms_timestamp: new Date().toISOString()
                 })
                 setRegisteredUserId(data.user?.id)
 
@@ -393,6 +435,8 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 phone,
                 role,
                 organization_name: organizationName || null,
+                accepted_terms: true,
+                accepted_terms_timestamp: new Date().toISOString()
             })
             setRegisteredUserId(data.user?.id)
 
@@ -701,6 +745,20 @@ export const RegisterForm = forwardRef(function RegisterForm(
 
                         </div>
 
+                        {/* Terms & Conditions Checkbox */}
+                        <div className="auth-checkbox-wrapper">
+                            <input
+                                type="checkbox"
+                                id="terms-checkbox"
+                                className="auth-checkbox-input"
+                                checked={acceptedTerms}
+                                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                            />
+                            <label htmlFor="terms-checkbox" className="auth-terms-label">
+                                I agree to the <button type="button" className="auth-terms-link" onClick={() => setShowTerms(true)}>Terms & Conditions</button>
+                            </label>
+                        </div>
+
                         <button
                             className={`auth-submit-btn ${loading ? 'auth-submit-btn--loading' : ''}`}
                             type="submit"
@@ -727,7 +785,8 @@ export const RegisterForm = forwardRef(function RegisterForm(
                         </button>
                     </div>
                 </>
-            )}
+            )
+            }
 
             {/* ═══════════ STEP 2 — DONOR ═══════════ */}
             {step === 2 && role === 'donor' && (
@@ -826,149 +885,167 @@ export const RegisterForm = forwardRef(function RegisterForm(
             )}
 
             {/* ═══════════ STEP 2 — NGO ═══════════ */}
-            {step === 2 && role === 'ngo' && (
-                <div ref={step2Ref}>
-                    <button
-                        type="button"
-                        className="auth-back-btn"
-                        onClick={() => setStep(1)}
-                        disabled
-                        title="You've already registered. Complete your profile."
-                    >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="15 18 9 12 15 6" />
-                        </svg>
-                    </button>
-
-                    <h1 className="auth-heading">{step2TitleChars}</h1>
-                    <p className="auth-subtitle">
-                        Set up your NGO to start receiving surplus food donations.
-                    </p>
-
-                    {error && <div className="auth-error-msg">{error}</div>}
-
-                    <form onSubmit={handleNGOSubmit}>
-                        <div className="auth-fields">
-                            <div className="auth-input-group">
-                                <label htmlFor="ngo-name">NGO Name</label>
-                                <input
-                                    type="text"
-                                    id="ngo-name"
-                                    placeholder="Your NGO name"
-                                    value={ngoName}
-                                    onChange={(e) => setNgoName(e.target.value)}
-                                />
-                                <span className="auth-input-line" />
-                            </div>
-
-                            <div className="auth-input-group">
-                                <label htmlFor="ngo-regnumber">Registration Number <span className="auth-optional">(Optional)</span></label>
-                                <input
-                                    type="text"
-                                    id="ngo-regnumber"
-                                    placeholder="e.g. NGO-MH-2024-1234"
-                                    value={registrationNumber}
-                                    onChange={(e) => setRegistrationNumber(e.target.value)}
-                                />
-                                <span className="auth-input-line" />
-                            </div>
-
-                            <div className="auth-input-group">
-                                <label htmlFor="ngo-contact">Contact Person Name</label>
-                                <input
-                                    type="text"
-                                    id="ngo-contact"
-                                    placeholder="Primary contact person"
-                                    value={contactPerson}
-                                    onChange={(e) => setContactPerson(e.target.value)}
-                                />
-                                <span className="auth-input-line" />
-                            </div>
-
-                            {/* Location Picker with Radius */}
-                            <div className="auth-role-specific-section">
-                                <LocationPicker
-                                    address={ngoAddress}
-                                    onAddressChange={setNgoAddress}
-                                    onCityChange={setNgoCity}
-                                    onCoordsChange={(lat, lng) => {
-                                        setNgoLat(lat)
-                                        setNgoLng(lng)
-                                    }}
-                                    showRadius
-                                    radius={serviceRadius}
-                                    onRadiusChange={setServiceRadius}
-                                />
-                            </div>
-
-                            {/* Hidden coordinate display */}
-                            {ngoLat && ngoLng && (
-                                <div className="auth-coords-display">
-                                    <span className="auth-coords-badge">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" /></svg>
-                                        {ngoLat.toFixed(6)}, {ngoLng.toFixed(6)}
-                                    </span>
-                                    {ngoCity && <span className="auth-coords-city">{ngoCity}</span>}
-                                </div>
-                            )}
-                        </div>
-
+            {
+                step === 2 && role === 'ngo' && (
+                    <div ref={step2Ref}>
                         <button
-                            className={`auth-submit-btn ${loading ? 'auth-submit-btn--loading' : ''}`}
-                            type="submit"
-                            disabled={loading}
+                            type="button"
+                            className="auth-back-btn"
+                            onClick={() => setStep(1)}
+                            disabled
+                            title="You've already registered. Complete your profile."
                         >
-                            {loading ? <span className="auth-btn-spinner" /> : 'Complete Registration'}
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="15 18 9 12 15 6" />
+                            </svg>
                         </button>
-                    </form>
-                </div>
-            )}
+
+                        <h1 className="auth-heading">{step2TitleChars}</h1>
+                        <p className="auth-subtitle">
+                            Set up your NGO to start receiving surplus food donations.
+                        </p>
+
+                        {error && <div className="auth-error-msg">{error}</div>}
+
+                        <form onSubmit={handleNGOSubmit}>
+                            <div className="auth-fields">
+                                <div className="auth-input-group">
+                                    <label htmlFor="ngo-name">NGO Name</label>
+                                    <input
+                                        type="text"
+                                        id="ngo-name"
+                                        placeholder="Your NGO name"
+                                        value={ngoName}
+                                        onChange={(e) => setNgoName(e.target.value)}
+                                    />
+                                    <span className="auth-input-line" />
+                                </div>
+
+                                <div className="auth-input-group">
+                                    <label htmlFor="ngo-regnumber">Registration Number <span className="auth-optional">(Optional)</span></label>
+                                    <input
+                                        type="text"
+                                        id="ngo-regnumber"
+                                        placeholder="e.g. NGO-MH-2024-1234"
+                                        value={registrationNumber}
+                                        onChange={(e) => setRegistrationNumber(e.target.value)}
+                                    />
+                                    <span className="auth-input-line" />
+                                </div>
+
+                                <div className="auth-input-group">
+                                    <label htmlFor="ngo-contact">Contact Person Name</label>
+                                    <input
+                                        type="text"
+                                        id="ngo-contact"
+                                        placeholder="Primary contact person"
+                                        value={contactPerson}
+                                        onChange={(e) => setContactPerson(e.target.value)}
+                                    />
+                                    <span className="auth-input-line" />
+                                </div>
+
+                                {/* Location Picker with Radius */}
+                                <div className="auth-role-specific-section">
+                                    <LocationPicker
+                                        address={ngoAddress}
+                                        onAddressChange={setNgoAddress}
+                                        onCityChange={setNgoCity}
+                                        onCoordsChange={(lat, lng) => {
+                                            setNgoLat(lat)
+                                            setNgoLng(lng)
+                                        }}
+                                        showRadius
+                                        radius={serviceRadius}
+                                        onRadiusChange={setServiceRadius}
+                                    />
+                                </div>
+
+                                {/* Hidden coordinate display */}
+                                {ngoLat && ngoLng && (
+                                    <div className="auth-coords-display">
+                                        <span className="auth-coords-badge">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" /></svg>
+                                            {ngoLat.toFixed(6)}, {ngoLng.toFixed(6)}
+                                        </span>
+                                        {ngoCity && <span className="auth-coords-city">{ngoCity}</span>}
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                className={`auth-submit-btn ${loading ? 'auth-submit-btn--loading' : ''}`}
+                                type="submit"
+                                disabled={loading}
+                            >
+                                {loading ? <span className="auth-btn-spinner" /> : 'Complete Registration'}
+                            </button>
+                        </form>
+                    </div>
+                )
+            }
 
             {/* ═══════════ STEP 2 — VOLUNTEER ═══════════ */}
-            {step === 2 && role === 'volunteer' && (
-                <div ref={step2Ref} className="auth-success-block">
-                    <div className="auth-success-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--tundora)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                            <polyline points="22 4 12 14.01 9 11.01" />
-                        </svg>
+            {
+                step === 2 && role === 'volunteer' && (
+                    <div ref={step2Ref} className="auth-success-block">
+                        <div className="auth-success-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--tundora)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                <polyline points="22 4 12 14.01 9 11.01" />
+                            </svg>
+                        </div>
+                        <h1 className="auth-heading">{step2TitleChars}</h1>
+                        <p className="auth-subtitle">
+                            Your volunteer account has been created successfully. You can now join community drives and help with food distribution.
+                        </p>
+                        <button
+                            className="auth-submit-btn"
+                            type="button"
+                            onClick={handleVolunteerComplete}
+                        >
+                            Go to Dashboard
+                        </button>
                     </div>
-                    <h1 className="auth-heading">{step2TitleChars}</h1>
-                    <p className="auth-subtitle">
-                        Your volunteer account has been created successfully. You can now join community drives and help with food distribution.
-                    </p>
-                    <button
-                        className="auth-submit-btn"
-                        type="button"
-                        onClick={handleVolunteerComplete}
-                    >
-                        Go to Dashboard
-                    </button>
-                </div>
-            )}
+                )
+            }
 
             {/* ═══════════ STEP 2 — ADMIN (Success) ═══════════ */}
-            {step === 2 && role === 'admin' && (
-                <div className="auth-success-block" ref={step2Ref}>
-                    <div className="auth-success-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--tundora)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                            <polyline points="22 4 12 14.01 9 11.01" />
-                        </svg>
+            {
+                step === 2 && role === 'admin' && (
+                    <div className="auth-success-block" ref={step2Ref}>
+                        <div className="auth-success-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--tundora)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                <polyline points="22 4 12 14.01 9 11.01" />
+                            </svg>
+                        </div>
+                        <h1 className="auth-heading">{step2TitleChars}</h1>
+                        <p className="auth-subtitle">
+                            Your admin account has been created successfully. Welcome aboard.
+                        </p>
+                        <button
+                            className="auth-submit-btn"
+                            type="button"
+                            onClick={handleAdminComplete}
+                        >
+                            Go to Dashboard
+                        </button>
                     </div>
-                    <h1 className="auth-heading">{step2TitleChars}</h1>
-                    <p className="auth-subtitle">
-                        Your admin account has been created successfully. Welcome aboard.
-                    </p>
-                    <button
-                        className="auth-submit-btn"
-                        type="button"
-                        onClick={handleAdminComplete}
-                    >
-                        Go to Dashboard
-                    </button>
-                </div>
-            )}
-        </div>
+                )
+            }
+            {/* Terms Modal */}
+            {
+                showTerms && (
+                    <TermsModal
+                        onClose={() => setShowTerms(false)}
+                        onAccept={() => {
+                            setAcceptedTerms(true)
+                            setShowTerms(false)
+                        }}
+                    />
+                )
+            }
+        </div >
     )
 })

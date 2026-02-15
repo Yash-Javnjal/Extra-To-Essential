@@ -1456,3 +1456,186 @@
         height: 180px;
     }
 }
+
+/* ── Terms Modal ── */
+.auth-terms-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.auth-terms-modal {
+    background: var(--white);
+    width: 100%;
+    max-width: 500px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    animation: slideUp 0.3s ease-out;
+}
+
+.auth-terms-header {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--swiss-coffee);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.auth-terms-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--tundora);
+}
+
+.auth-terms-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--boulder);
+    line-height: 1;
+}
+
+.auth-terms-content {
+    padding: var(--space-lg);
+    overflow-y: auto;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.auth-terms-content ul {
+    list-style-type: disc;
+    padding-left: var(--space-lg);
+    margin: var(--space-md) 0;
+}
+
+.auth-terms-content li {
+    margin-bottom: var(--space-sm);
+}
+
+.auth-terms-footer {
+    padding: var(--space-md) var(--space-lg);
+    border-top: 1px solid var(--swiss-coffee);
+    text-align: right;
+    background: #f9f9f9;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.auth-terms-accept-btn {
+    background: var(--tundora);
+    color: var(--white);
+    border: none;
+    padding: 10px 24px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.auth-terms-accept-btn:hover {
+    background: #352e2e;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Checkbox Style for T&C */
+.auth-checkbox-wrapper {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: var(--space-lg);
+    gap: 10px;
+}
+
+.auth-checkbox-input {
+    appearance: none;
+    background-color: var(--white);
+    margin: 0;
+    font: inherit;
+    color: currentColor;
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid var(--boulder);
+    border-radius: 4px;
+    display: grid;
+    place-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    cursor: pointer;
+}
+
+.auth-checkbox-input::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    box-shadow: inset 1em 1em var(--tundora);
+    transform-origin: center;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    background-color: var(--tundora);
+}
+
+.auth-checkbox-input:checked::before {
+    transform: scale(1);
+    box-shadow: none;
+    /* using background-color */
+}
+
+.auth-checkbox-input:focus {
+    outline: 2px solid var(--tundora);
+    outline-offset: 2px;
+}
+
+.auth-terms-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.auth-terms-link {
+    color: var(--tundora);
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 500;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: inherit;
+}

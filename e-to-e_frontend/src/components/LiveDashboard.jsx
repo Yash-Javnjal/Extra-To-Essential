@@ -3,7 +3,6 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import './LiveDashboard.css'
 import EssenceLine from './EssenceLine'
-import CinematicFooter from './CinematicFooter'
 
 gsap.registerPlugin(ScrollTrigger)
 

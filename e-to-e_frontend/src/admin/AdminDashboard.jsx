@@ -25,6 +25,15 @@ import {
 } from '../lib/adminApi'
 import './AdminStyles.css'
 
+// Suppress GSAP warnings for missing targets during dev/init
+if (typeof console !== 'undefined') {
+    const originalWarn = console.warn
+    console.warn = (...args) => {
+        if (typeof args[0] === 'string' && args[0].includes('GSAP target')) return
+        originalWarn(...args)
+    }
+}
+
 gsap.registerPlugin(ScrollTrigger)
 
 export default function AdminDashboard() {
@@ -51,6 +60,8 @@ export default function AdminDashboard() {
     const contentRef = useRef(null)
     const masterTl = useRef(null)
     const pollRef = useRef(null)
+    const sidebarRef = useRef(null)
+    const headerRef = useRef(null)
 
     /* ── Helpers ── */
     const generateActivityFeed = useCallback((ngosList, donorsList, listingsList) => {
@@ -155,7 +166,6 @@ export default function AdminDashboard() {
                 defaults: { ease: 'power4.out', overwrite: 'auto' },
             })
 
-            /* ── ACT I: Curtain Rise ── */
 
             // Overlay cinematic fade
             masterTl.current.to(overlayRef.current, {
@@ -179,20 +189,27 @@ export default function AdminDashboard() {
 
             // Sidebar slides in — ONLY transform x, no opacity change
             // (sidebar children manage their own visibility)
-            masterTl.current.fromTo(
-                '.admin-sidebar',
-                { x: -280 },
-                { x: 0, duration: 0.9, ease: 'expo.out', clearProps: 'x' },
-                '-=0.5'
-            )
+            // Sidebar slides in — ONLY transform x, no opacity change
+            // (sidebar children manage their own visibility)
+            if (sidebarRef.current) {
+                masterTl.current.fromTo(
+                    sidebarRef.current,
+                    { x: -280 },
+                    { x: 0, duration: 0.9, ease: 'expo.out', clearProps: 'x' },
+                    '-=0.5'
+                )
+            }
 
             // Header drops from above
-            masterTl.current.fromTo(
-                '.admin-header',
-                { y: -80, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.7, ease: 'back.out(1.2)', clearProps: 'all' },
-                '-=0.5'
-            )
+            // Header drops from above
+            if (headerRef.current) {
+                masterTl.current.fromTo(
+                    headerRef.current,
+                    { y: -80, opacity: 0 },
+                    { y: 0, opacity: 1, duration: 0.7, ease: 'back.out(1.2)', clearProps: 'all' },
+                    '-=0.5'
+                )
+            }
 
             /* ── ACT III: Data Awakening ── */
 
@@ -300,7 +317,7 @@ export default function AdminDashboard() {
             }
 
             // Header buttons
-            const headerBtns = document.querySelectorAll('.admin-header__btn')
+            const headerBtns = headerRef.current?.querySelectorAll('.admin-header__btn')
             if (headerBtns?.length) {
                 masterTl.current.fromTo(
                     headerBtns,
@@ -365,6 +382,7 @@ export default function AdminDashboard() {
 
                 {/* Sidebar */}
                 <AdminSidebar
+                    ref={sidebarRef}
                     activeSection={activeSection}
                     onNavigate={scrollToSection}
                     user={user}
@@ -374,7 +392,7 @@ export default function AdminDashboard() {
 
                 {/* Main Area */}
                 <div className="admin-main">
-                    <AdminHeader user={user} alertCount={alerts.length} />
+                    <AdminHeader ref={headerRef} user={user} alertCount={alerts.length} />
 
                     <div className="admin-content" ref={contentRef}>
                         {error && (
@@ -406,7 +424,7 @@ export default function AdminDashboard() {
 
                         {/* 4 — Donor Management */}
                         <div id="admin-donors">
-                            <DonorManagement donors={donors} />
+                            <DonorManagement donors={donors} onRefresh={() => fetchAllData(false)} />
                         </div>
 
                         {/* 5 — Volunteer Network */}

@@ -5,63 +5,63 @@ const { supabaseAdmin } = require('../config/supabaseClient');
  */
 const getTotalImpactMetrics = async () => {
   try {
-    // Try the RPC first
+    // Try the RPC first for impact stats
+    let metrics = {};
     const { data, error } = await supabaseAdmin.rpc('get_total_impact_metrics');
 
     if (!error && data) {
-      return {
-        success: true,
-        metrics: data
+      metrics = data;
+    } else {
+      console.warn('RPC get_total_impact_metrics failed, using fallback queries for impact:', error?.message);
+
+      // Sum food kg from impact_metrics
+      let totalFoodKg = 0;
+      let totalCo2Kg = 0;
+
+      const { data: impactData } = await supabaseAdmin
+        .from('impact_metrics')
+        .select('food_saved_kg, co2_emissions_reduced_kg');
+
+      if (impactData && impactData.length > 0) {
+        totalFoodKg = impactData.reduce((sum, row) => sum + (parseFloat(row.food_saved_kg) || 0), 0);
+        totalCo2Kg = impactData.reduce((sum, row) => sum + (parseFloat(row.co2_emissions_reduced_kg) || 0), 0);
+      } else {
+        // Try food_listings as alternative
+        const { data: listings } = await supabaseAdmin
+          .from('food_listings')
+          .select('quantity_kg');
+
+        if (listings && listings.length > 0) {
+          totalFoodKg = listings.reduce((sum, row) => sum + (parseFloat(row.quantity_kg) || 0), 0);
+          totalCo2Kg = totalFoodKg * 2.5; // approximate
+        }
+      }
+
+      metrics = {
+        total_food_saved_kg: Math.round(totalFoodKg),
+        total_co2_reduced_kg: Math.round(totalCo2Kg * 100) / 100,
       };
     }
 
-    // Fallback: query tables directly if RPC doesn't exist
-    console.warn('RPC get_total_impact_metrics failed, using fallback queries:', error?.message);
-
-    // Count NGOs
+    // ALWAYS fetch counts from profiles table as requested
     const { count: ngoCount } = await supabaseAdmin
-      .from('ngo_profiles')
-      .select('*', { count: 'exact', head: true });
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'ngo');
 
-    // Count Donors
     const { count: donorCount } = await supabaseAdmin
-      .from('donor_profiles')
-      .select('*', { count: 'exact', head: true });
-
-    // Sum food kg from impact_metrics or food_listings
-    let totalFoodKg = 0;
-    let totalCo2Kg = 0;
-
-    const { data: impactData } = await supabaseAdmin
-      .from('impact_metrics')
-      .select('food_saved_kg, co2_emissions_reduced_kg');
-
-    if (impactData && impactData.length > 0) {
-      totalFoodKg = impactData.reduce((sum, row) => sum + (parseFloat(row.food_saved_kg) || 0), 0);
-      totalCo2Kg = impactData.reduce((sum, row) => sum + (parseFloat(row.co2_emissions_reduced_kg) || 0), 0);
-    } else {
-      // Try food_listings as alternative
-      const { data: listings } = await supabaseAdmin
-        .from('food_listings')
-        .select('quantity_kg');
-
-      if (listings && listings.length > 0) {
-        totalFoodKg = listings.reduce((sum, row) => sum + (parseFloat(row.quantity_kg) || 0), 0);
-        totalCo2Kg = totalFoodKg * 2.5; // approximate
-      }
-    }
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'donor');
 
     return {
       success: true,
       metrics: {
+        ...metrics,
         total_ngos: ngoCount || 0,
         total_donors: donorCount || 0,
-        total_food_saved_kg: Math.round(totalFoodKg),
-        total_co2_reduced_kg: Math.round(totalCo2Kg * 100) / 100,
         ngo_count: ngoCount || 0,
         donor_count: donorCount || 0,
-        total_food_kg: Math.round(totalFoodKg),
-        total_co2_kg: Math.round(totalCo2Kg * 100) / 100,
       }
     };
   } catch (error) {

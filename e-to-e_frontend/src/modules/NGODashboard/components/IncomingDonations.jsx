@@ -39,7 +39,18 @@ export default function IncomingDonations() {
     }
 
     function getDistance(listing) {
-        if (listing.distance_km != null) return `${parseFloat(listing.distance_km).toFixed(1)} km`
+        if (listing.distance_km != null) {
+            const km = parseFloat(listing.distance_km).toFixed(1)
+            const isFar = listing.within_service_radius === false
+            return (
+                <>
+                    <span className={`ngo-distance-badge ${isFar ? 'ngo-distance-badge--far' : 'ngo-distance-badge--near'}`}>
+                        {isFar ? '⚠ Far' : '✓ Nearby'}
+                    </span>
+                    {' '}{km} km
+                </>
+            )
+        }
         return '—'
     }
 

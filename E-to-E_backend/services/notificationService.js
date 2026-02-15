@@ -6,12 +6,9 @@ const { supabaseAdmin } = require('../config/supabaseClient');
  */
 const sendNotification = async (phoneNumber, messageType, messageBody, additionalData = {}) => {
   let notificationLogId = null;
-  try {
-    // Firebase Cloud Messaging doesn't send SMS directly
-    // This is a placeholder for push notifications
-    // For actual SMS, integrate Twilio or similar service
 
-    // Log notification attempt
+  // 1. Log the attempt first (PENDING)
+  try {
     const { data: notificationLog, error: logError } = await supabaseAdmin
       .from('notification_logs')
       .insert({
@@ -23,14 +20,26 @@ const sendNotification = async (phoneNumber, messageType, messageBody, additiona
       .select()
       .single();
 
-    if (logError) {
-      console.error('Failed to log notification:', logError);
-      throw logError;
-    }
-
+    if (logError) throw logError;
     notificationLogId = notificationLog?.notification_id;
 
-    // Update log with success
+    // 2. Try Firebase (if configured)
+    if (messaging) {
+      // Validation: Phone must be E.164
+      if (!phoneNumber || !phoneNumber.startsWith('+')) {
+        throw new Error(`Invalid phone number format: ${phoneNumber}`);
+      }
+
+      // Logic to send via Firebase (Push) or SMS provider
+      // For now, we simulate success if Firebase is present but no specific token logic is here
+      // In a real app, we'd look up the FCM token for the user from `profiles` table
+
+      // Placeholder: assume success if we reached here
+    } else {
+      console.warn('Firebase Messaging not configured. Skipping push notification.');
+    }
+
+    // 3. Update log to SENT (or simulated sent)
     await supabaseAdmin
       .from('notification_logs')
       .update({
@@ -39,18 +48,18 @@ const sendNotification = async (phoneNumber, messageType, messageBody, additiona
       })
       .eq('notification_id', notificationLogId);
 
-    console.log(`Notification sent to ${phoneNumber}: ${messageType}`);
+    console.log(`Notification log created for ${phoneNumber}: ${messageType}`);
 
     return {
       success: true,
       notificationId: notificationLogId,
-      message: 'Notification sent successfully'
+      message: 'Notification logged successfully'
     };
 
   } catch (error) {
-    console.error('Notification error:', error);
+    console.error('Notification error:', error.message);
 
-    // Log failure
+    // Update log to FAILED
     if (notificationLogId) {
       await supabaseAdmin
         .from('notification_logs')
@@ -61,6 +70,7 @@ const sendNotification = async (phoneNumber, messageType, messageBody, additiona
         .eq('notification_id', notificationLogId);
     }
 
+    // Return success:false but don't crash the caller
     return {
       success: false,
       error: error.message

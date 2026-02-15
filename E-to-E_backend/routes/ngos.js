@@ -485,4 +485,48 @@ router.delete('/me/volunteers/:volunteer_id', authenticateUser, ngoOnly, async (
   }
 });
 
+/**
+ * PUT /api/ngos/:ngo_id/verify
+ * Admin: Approve or deny an NGO (set verification_status)
+ */
+router.put('/:ngo_id/verify', authenticateUser, async (req, res) => {
+  try {
+    const { ngo_id } = req.params;
+    const { verification_status } = req.body;
+
+    if (typeof verification_status !== 'boolean') {
+      return res.status(400).json({
+        error: 'Missing required field',
+        required: ['verification_status (boolean)']
+      });
+    }
+
+    const { data: ngo, error } = await supabaseAdmin
+      .from('ngos')
+      .update({ verification_status })
+      .eq('ngo_id', ngo_id)
+      .select()
+      .single();
+
+    if (error || !ngo) {
+      return res.status(404).json({
+        error: 'NGO not found or update failed',
+        message: error?.message
+      });
+    }
+
+    res.json({
+      message: `NGO ${verification_status ? 'approved' : 'denied'} successfully`,
+      ngo
+    });
+
+  } catch (error) {
+    console.error('Verify NGO error:', error);
+    res.status(500).json({
+      error: 'Failed to update NGO verification',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;

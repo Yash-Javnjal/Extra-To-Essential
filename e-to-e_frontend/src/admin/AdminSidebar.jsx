@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, forwardRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { useAuth } from '../context/AuthContext'
@@ -23,12 +23,22 @@ const NAV_ITEMS = [
     { key: 'logs', Icon: ClipboardList, label: 'System Logs' },
 ]
 
-export default function AdminSidebar({ activeSection, onNavigate, user, stats, isOpen }) {
+const AdminSidebar = forwardRef(({ activeSection, onNavigate, user, stats, isOpen }, ref) => {
     const sidebarRef = useRef(null)
     const navigate = useNavigate()
     const auth = useAuth()
     const [loggingOut, setLoggingOut] = useState(false)
     const animatedRef = useRef(false)
+
+    // Sync forwarded ref with internal ref
+    useEffect(() => {
+        if (!ref) return
+        if (typeof ref === 'function') {
+            ref(sidebarRef.current)
+        } else {
+            ref.current = sidebarRef.current
+        }
+    }, [ref])
 
     useEffect(() => {
         if (!sidebarRef.current || animatedRef.current) return
@@ -125,4 +135,7 @@ export default function AdminSidebar({ activeSection, onNavigate, user, stats, i
             </div>
         </aside>
     )
-}
+})
+
+AdminSidebar.displayName = 'AdminSidebar'
+export default AdminSidebar

@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { gsap } from 'gsap'
-import { Search, Handshake, Check } from 'lucide-react'
+import { Search, Handshake, Check, X } from 'lucide-react'
+import { verifyDonor } from '../lib/adminApi'
 
 function formatDate(ts) {
     if (!ts) return '—'
@@ -16,9 +17,10 @@ function formatDate(ts) {
     return `${day} ${mon} ${year}, ${hours}:${mins} ${ampm}`
 }
 
-export default function DonorManagement({ donors }) {
+export default function DonorManagement({ donors, onRefresh }) {
     const [search, setSearch] = useState('')
     const [filter, setFilter] = useState('all')
+    const [actionLoading, setActionLoading] = useState(null)
     const tableRef = useRef(null)
 
     useEffect(() => {
@@ -33,6 +35,33 @@ export default function DonorManagement({ donors }) {
             delay: 0.2,
         })
     }, [donors, filter, search])
+
+    const handleApprove = useCallback(async (donorId) => {
+        setActionLoading(donorId)
+        try {
+            await verifyDonor(donorId, true)
+            if (onRefresh) await onRefresh()
+        } catch (err) {
+            console.error('Failed to approve donor:', err)
+            alert('Failed to approve donor: ' + (err.message || err.error || 'Unknown error'))
+        } finally {
+            setActionLoading(null)
+        }
+    }, [onRefresh])
+
+    const handleDeny = useCallback(async (donorId) => {
+        if (!confirm('Are you sure you want to deny this donor?')) return
+        setActionLoading(donorId)
+        try {
+            await verifyDonor(donorId, false)
+            if (onRefresh) await onRefresh()
+        } catch (err) {
+            console.error('Failed to deny donor:', err)
+            alert('Failed to deny donor: ' + (err.message || err.error || 'Unknown error'))
+        } finally {
+            setActionLoading(null)
+        }
+    }, [onRefresh])
 
     const filtered = donors.filter(d => {
         const name = d.profiles?.organization_name || ''
@@ -142,10 +171,24 @@ export default function DonorManagement({ donors }) {
                                                 View
                                             </button>
                                             {!d.verification_status && (
-                                                <button className="admin-action-btn admin-action-btn--approve">
-                                                    <Check size={12} strokeWidth={2.5} style={{ marginRight: 3 }} />
-                                                    Approve
-                                                </button>
+                                                <>
+                                                    <button
+                                                        className="admin-action-btn admin-action-btn--approve"
+                                                        onClick={() => handleApprove(d.donor_id)}
+                                                        disabled={actionLoading === d.donor_id}
+                                                    >
+                                                        <Check size={12} strokeWidth={2.5} style={{ marginRight: 3 }} />
+                                                        {actionLoading === d.donor_id ? 'Approving…' : 'Approve'}
+                                                    </button>
+                                                    <button
+                                                        className="admin-action-btn admin-action-btn--deny"
+                                                        onClick={() => handleDeny(d.donor_id)}
+                                                        disabled={actionLoading === d.donor_id}
+                                                    >
+                                                        <X size={12} strokeWidth={2.5} style={{ marginRight: 3 }} />
+                                                        Deny
+                                                    </button>
+                                                </>
                                             )}
                                         </div>
                                     </td>

@@ -375,6 +375,39 @@ export default function LocationPicker({
                 )}
             </div>
 
+            {/* Current Location Button */}
+            <div className="auth-location-actions" style={{ marginBottom: '1rem' }}>
+                <button
+                    type="button"
+                    className="auth-btn-outline"
+                    onClick={() => {
+                        if (!navigator.geolocation) {
+                            alert('Geolocation is not supported by your browser')
+                            return
+                        }
+                        setIsGeocoding(true)
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                const { latitude, longitude } = position.coords
+                                handleSetLocation(latitude, longitude)
+                            },
+                            (error) => {
+                                console.error('Geolocation error:', error)
+                                setIsGeocoding(false)
+                                alert('Unable to retrieve your location')
+                            }
+                        )
+                    }}
+                    disabled={isGeocoding}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', fontSize: '14px' }}
+                >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                    </svg>
+                    {isGeocoding ? 'Detecting...' : 'Use Current Location'}
+                </button>
+            </div>
+
             {/* Address confirmation */}
             {address && (
                 <div className="auth-address-confirmation">

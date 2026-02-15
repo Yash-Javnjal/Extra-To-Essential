@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { gsap } from 'gsap'
-import { Search, Building2, Check } from 'lucide-react'
+import { Search, Building2, Check, X, Ban } from 'lucide-react'
+import { verifyNGO } from '../lib/adminApi'
 
 function formatDate(ts) {
     if (!ts) return '—'
@@ -19,6 +20,7 @@ function formatDate(ts) {
 export default function NgoManagement({ ngos, onRefresh }) {
     const [search, setSearch] = useState('')
     const [filter, setFilter] = useState('all')
+    const [actionLoading, setActionLoading] = useState(null)
     const tableRef = useRef(null)
 
     useEffect(() => {
@@ -33,6 +35,47 @@ export default function NgoManagement({ ngos, onRefresh }) {
             delay: 0.2,
         })
     }, [ngos, filter, search])
+
+    const handleApprove = useCallback(async (ngoId) => {
+        setActionLoading(ngoId)
+        try {
+            await verifyNGO(ngoId, true)
+            if (onRefresh) await onRefresh()
+        } catch (err) {
+            console.error('Failed to approve NGO:', err)
+            alert('Failed to approve NGO: ' + (err.message || err.error || 'Unknown error'))
+        } finally {
+            setActionLoading(null)
+        }
+    }, [onRefresh])
+
+    const handleDeny = useCallback(async (ngoId) => {
+        if (!confirm('Are you sure you want to deny this NGO?')) return
+        setActionLoading(ngoId)
+        try {
+            await verifyNGO(ngoId, false)
+            if (onRefresh) await onRefresh()
+        } catch (err) {
+            console.error('Failed to deny NGO:', err)
+            alert('Failed to deny NGO: ' + (err.message || err.error || 'Unknown error'))
+        } finally {
+            setActionLoading(null)
+        }
+    }, [onRefresh])
+
+    const handleSuspend = useCallback(async (ngoId) => {
+        if (!confirm('Are you sure you want to suspend this NGO?')) return
+        setActionLoading(ngoId)
+        try {
+            await verifyNGO(ngoId, false)
+            if (onRefresh) await onRefresh()
+        } catch (err) {
+            console.error('Failed to suspend NGO:', err)
+            alert('Failed to suspend NGO: ' + (err.message || err.error || 'Unknown error'))
+        } finally {
+            setActionLoading(null)
+        }
+    }, [onRefresh])
 
     const filtered = ngos.filter(ngo => {
         const matchSearch = !search ||
@@ -137,17 +180,33 @@ export default function NgoManagement({ ngos, onRefresh }) {
                                     <td>
                                         <div className="admin-actions-cell">
                                             {!ngo.verification_status && (
-                                                <button className="admin-action-btn admin-action-btn--approve">
-                                                    <Check size={12} strokeWidth={2.5} style={{ marginRight: 3 }} />
-                                                    Approve
-                                                </button>
+                                                <>
+                                                    <button
+                                                        className="admin-action-btn admin-action-btn--approve"
+                                                        onClick={() => handleApprove(ngo.ngo_id)}
+                                                        disabled={actionLoading === ngo.ngo_id}
+                                                    >
+                                                        <Check size={12} strokeWidth={2.5} style={{ marginRight: 3 }} />
+                                                        {actionLoading === ngo.ngo_id ? 'Approving…' : 'Approve'}
+                                                    </button>
+                                                    <button
+                                                        className="admin-action-btn admin-action-btn--deny"
+                                                        onClick={() => handleDeny(ngo.ngo_id)}
+                                                        disabled={actionLoading === ngo.ngo_id}
+                                                    >
+                                                        <X size={12} strokeWidth={2.5} style={{ marginRight: 3 }} />
+                                                        Deny
+                                                    </button>
+                                                </>
                                             )}
-                                            <button className="admin-action-btn admin-action-btn--view">
-                                                View
-                                            </button>
                                             {ngo.verification_status && (
-                                                <button className="admin-action-btn admin-action-btn--suspend">
-                                                    Suspend
+                                                <button
+                                                    className="admin-action-btn admin-action-btn--suspend"
+                                                    onClick={() => handleSuspend(ngo.ngo_id)}
+                                                    disabled={actionLoading === ngo.ngo_id}
+                                                >
+                                                    <Ban size={12} strokeWidth={2} style={{ marginRight: 3 }} />
+                                                    {actionLoading === ngo.ngo_id ? 'Suspending…' : 'Suspend'}
                                                 </button>
                                             )}
                                         </div>

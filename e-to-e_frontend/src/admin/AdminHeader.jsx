@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, forwardRef } from 'react'
 import { Bell, RefreshCw } from 'lucide-react'
 
-export default function AdminHeader({ user, alertCount = 0 }) {
+const AdminHeader = forwardRef(({ user, alertCount = 0 }, ref) => {
     const [time, setTime] = useState(new Date())
 
     useEffect(() => {
@@ -35,7 +35,7 @@ export default function AdminHeader({ user, alertCount = 0 }) {
     }
 
     return (
-        <header className="admin-header">
+        <header className="admin-header" ref={ref}>
             <div className="admin-header__left">
                 <span className="admin-header__greeting">
                     {getGreeting()}, {user?.full_name?.split(' ')[0] || 'Admin'}
@@ -66,4 +66,7 @@ export default function AdminHeader({ user, alertCount = 0 }) {
             </div>
         </header>
     )
-}
+})
+
+AdminHeader.displayName = 'AdminHeader'
+export default AdminHeader

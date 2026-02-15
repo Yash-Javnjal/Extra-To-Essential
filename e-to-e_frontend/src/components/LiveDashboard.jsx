@@ -5,12 +5,12 @@ import './LiveDashboard.css'
 
 gsap.registerPlugin(ScrollTrigger)
 
-/* Default fallback values shown while the API loads or if it fails */
+/* Default fallback values — will be replaced by real data */
 const FALLBACK = {
-    total_ngos: 70,
-    total_donors: 150,
-    total_food_kg: 12000,
-    total_co2_tonnes: 8,
+    total_ngos: 0,
+    total_donors: 0,
+    total_food_kg: 0,
+    total_co2_tonnes: 0,
 }
 
 const CARD_META = [
@@ -69,61 +69,74 @@ const LiveDashboard = () => {
     const cardsRef = useRef([])
     const [liveStats, setLiveStats] = useState(FALLBACK)
 
-    /* Fetch real impact data from backend (public endpoint, no auth needed) */
+    /* Fetch real data from backend (public endpoints, no auth needed) */
     useEffect(() => {
         let cancelled = false
-        async function fetchImpact() {
+        async function fetchLiveData() {
             try {
+                // Fetch only impact metrics which uses the optimized admin queries
                 const res = await fetch(`${API_URL}/impact/total`)
                 if (!res.ok) return
                 const data = await res.json()
+
                 if (cancelled) return
 
-                const m = data.metrics || data
+                const m = data.metrics || {}
+
+                const foodKg = Math.round(parseFloat(m.total_food_saved_kg ?? m.total_food_kg ?? 0))
+
                 setLiveStats({
-                    total_ngos: m.total_ngos ?? m.ngo_count ?? FALLBACK.total_ngos,
-                    total_donors: m.total_donors ?? m.donor_count ?? FALLBACK.total_donors,
-                    total_food_kg: Math.round(parseFloat(m.total_food_saved_kg ?? m.total_food_kg ?? FALLBACK.total_food_kg)),
-                    total_co2_tonnes: parseFloat(((m.total_co2_reduced_kg ?? m.total_co2_kg ?? FALLBACK.total_co2_tonnes * 1000) / 1000).toFixed(1)),
+                    total_ngos: m.total_ngos ?? m.ngo_count ?? m.active_ngos ?? 0,
+                    total_donors: m.total_donors ?? m.donor_count ?? m.active_donors ?? 0,
+                    total_food_kg: foodKg,
+                    // For 10 kg food: roughly 25kg CO2 saved
+                    total_co2_tonnes: parseFloat(((foodKg * 2.5) / 1000).toFixed(2)),
                 })
-            } catch {
-                /* keep fallback values */
+            } catch (err) {
+                console.warn('Failed to fetch live stats', err)
+                /* keep fallback values/zeros on network error */
             }
         }
-        fetchImpact()
+        fetchLiveData()
         return () => { cancelled = true }
     }, [])
 
     useEffect(() => {
         const ctx = gsap.context(() => {
             // Section title animation
-            gsap.from('.dashboard__label, .dashboard__title, .dashboard__subtitle', {
-                y: 40,
-                opacity: 0,
-                duration: 0.8,
-                stagger: 0.15,
-                ease: 'power3.out',
-                scrollTrigger: {
-                    trigger: sectionRef.current,
-                    start: 'top 80%',
-                    toggleActions: 'play none none reverse',
-                },
-            })
-
-            // Animate cards
-            cardsRef.current.forEach((card, i) => {
-                gsap.from(card, {
-                    y: 60,
-                    opacity: 0,
+            gsap.fromTo('.dashboard__label, .dashboard__title, .dashboard__subtitle',
+                { y: 40, autoAlpha: 0 },
+                {
+                    y: 0,
+                    autoAlpha: 1,
                     duration: 0.8,
-                    delay: i * 0.15,
+                    stagger: 0.15,
                     ease: 'power3.out',
                     scrollTrigger: {
                         trigger: sectionRef.current,
-                        start: 'top 70%',
+                        start: 'top 80%',
                         toggleActions: 'play none none reverse',
                     },
-                })
+                }
+            )
+
+            // Animate cards
+            cardsRef.current.forEach((card, i) => {
+                gsap.fromTo(card,
+                    { y: 60, autoAlpha: 0 },
+                    {
+                        y: 0,
+                        autoAlpha: 1,
+                        duration: 0.8,
+                        delay: i * 0.15,
+                        ease: 'power3.out',
+                        scrollTrigger: {
+                            trigger: sectionRef.current,
+                            start: 'top 75%',
+                            toggleActions: 'play none none reverse',
+                        },
+                    }
+                )
             })
 
             // Counter animation
@@ -133,20 +146,26 @@ const LiveDashboard = () => {
 
                 const targetVal = liveStats[card.fallbackKey] ?? 0
                 const obj = { val: 0 }
+
                 gsap.to(obj, {
                     val: targetVal,
                     duration: 2,
-                    delay: i * 0.2,
+                    delay: 0.2 + (i * 0.1),
                     ease: 'power2.out',
                     scrollTrigger: {
                         trigger: sectionRef.current,
-                        start: 'top 60%',
+                        start: 'top 75%',
                         toggleActions: 'play none none reverse',
                     },
                     onUpdate: () => {
-                        valueEl.textContent = targetVal >= 1000
-                            ? Math.round(obj.val).toLocaleString()
-                            : Math.round(obj.val * 10) / 10
+                        if (targetVal >= 1000) {
+                            valueEl.textContent = Math.round(obj.val).toLocaleString()
+                        } else if (card.id === 'co2') {
+                            // Show decimals for small CO2 values (Tonnes)
+                            valueEl.textContent = parseFloat(obj.val.toFixed(2))
+                        } else {
+                            valueEl.textContent = Math.round(obj.val * 10) / 10
+                        }
                     },
                 })
             })

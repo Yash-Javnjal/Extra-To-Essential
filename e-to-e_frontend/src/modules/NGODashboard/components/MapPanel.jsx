@@ -1,7 +1,8 @@
-import { useEffect, useRef, useMemo } from 'react'
+import { useEffect, useRef, useMemo, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { useNGO } from '../context/NGOContext'
+import { supabase } from "../../../lib/supabaseClient";
 import 'leaflet/dist/leaflet.css'
 
 /* ─── Custom Marker Icons ─── */
@@ -93,11 +94,49 @@ export default function MapPanel() {
         return markers
     }, [claims, listings])
 
-    /* Volunteer markers from deliveries */
+    /* Real-time Volunteer Tracking */
+    const [liveVolunteers, setLiveVolunteers] = useState({})
+
+    useEffect(() => {
+        const channel = supabase.channel('tracking')
+            .on('broadcast', { event: 'location_update' }, (payload) => {
+                setLiveVolunteers(prev => ({
+                    ...prev,
+                    [payload.payload.volunteer_id]: payload.payload
+                }))
+            })
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [])
+
+    /* Volunteer markers: Merge DB deliveries with Live locations */
     const volunteerMarkers = useMemo(() => {
         const markers = []
+        const processedVolunteers = new Set()
+
+        // 1. Live Volunteers (High Priority)
+        Object.values(liveVolunteers).forEach(v => {
+            if (!v.latitude || !v.longitude) return
+            processedVolunteers.add(v.volunteer_id)
+            markers.push({
+                id: `live-${v.volunteer_id}`,
+                lat: v.latitude,
+                lng: v.longitude,
+                name: 'Volunteer (Live)', // We ideally need the name from context or DB, but ID or generic is fine for now
+                vehicle: 'Unknown',
+                status: v.status,
+                isLive: true
+            })
+        })
+
+        // 2. Deliveries (Fallback for offline/static)
         deliveries.forEach((d) => {
             if (!d.volunteers || !d.ngo_claims?.food_listings) return
+            if (processedVolunteers.has(d.volunteer_id)) return // Skip if we have live data
+
             const fl = d.ngo_claims.food_listings
             // Place volunteer marker near pickup (offset slightly)
             if (!fl.latitude || !fl.longitude) return
@@ -108,10 +147,11 @@ export default function MapPanel() {
                 name: d.volunteers.full_name,
                 vehicle: d.volunteers.vehicle_type || '',
                 status: d.delivery_status,
+                isLive: false
             })
         })
         return markers
-    }, [deliveries])
+    }, [deliveries, liveVolunteers])
 
     /* Route lines: NGO → Donor for active claims */
     const routeLines = useMemo(() => {

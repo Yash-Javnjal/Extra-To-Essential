@@ -305,4 +305,48 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * PUT /api/donors/:donor_id/verify
+ * Admin: Approve or deny a donor (set verification_status)
+ */
+router.put('/:donor_id/verify', authenticateUser, async (req, res) => {
+  try {
+    const { donor_id } = req.params;
+    const { verification_status } = req.body;
+
+    if (typeof verification_status !== 'boolean') {
+      return res.status(400).json({
+        error: 'Missing required field',
+        required: ['verification_status (boolean)']
+      });
+    }
+
+    const { data: donor, error } = await supabaseAdmin
+      .from('donors')
+      .update({ verification_status })
+      .eq('donor_id', donor_id)
+      .select()
+      .single();
+
+    if (error || !donor) {
+      return res.status(404).json({
+        error: 'Donor not found or update failed',
+        message: error?.message
+      });
+    }
+
+    res.json({
+      message: `Donor ${verification_status ? 'approved' : 'denied'} successfully`,
+      donor
+    });
+
+  } catch (error) {
+    console.error('Verify donor error:', error);
+    res.status(500).json({
+      error: 'Failed to update donor verification',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;

@@ -12,6 +12,7 @@ import NotFoundPage from './pages/NotFoundPage'
 import DonorDashboard from './DonorDashboard/pages/DonorDashboard'
 import NGODashboard from './modules/NGODashboard/pages/NGODashboard'
 import AdminDashboard from './admin/AdminDashboard'
+import VolunteerPage from './pages/VolunteerPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 gsap.registerPlugin(ScrollTrigger)

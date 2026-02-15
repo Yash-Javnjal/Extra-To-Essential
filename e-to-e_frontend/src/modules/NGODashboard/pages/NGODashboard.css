@@ -1313,3 +1313,30 @@
         max-width: none;
     }
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   DISTANCE BADGES
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.ngo-distance-badge {
+    display: inline-block;
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+.ngo-distance-badge--near {
+    background: rgba(76, 175, 80, 0.12);
+    color: #2e7d32;
+}
+
+.ngo-distance-badge--far {
+    background: rgba(255, 152, 0, 0.12);
+    color: #e65100;
+}

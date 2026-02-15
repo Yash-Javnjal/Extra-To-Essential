@@ -98,3 +98,19 @@ export async function logoutUser() {
         localStorage.removeItem('refresh_token')
     }
 }
+
+/* ─── Admin Verification ─── */
+
+export async function verifyNGO(ngoId, approve = true) {
+    return apiFetch(`/ngos/${ngoId}/verify`, {
+        method: 'PUT',
+        body: JSON.stringify({ verification_status: approve }),
+    })
+}
+
+export async function verifyDonor(donorId, approve = true) {
+    return apiFetch(`/donors/${donorId}/verify`, {
+        method: 'PUT',
+        body: JSON.stringify({ verification_status: approve }),
+    })
+}

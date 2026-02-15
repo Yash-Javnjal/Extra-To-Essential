@@ -170,7 +170,7 @@ const Hero = () => {
 
     return (
         <>
-            <section ref={heroRef} className="hero" id="hero">
+            <section ref={heroRef} className="hero" id="home">
                 <div className="hero__bg">
                     <img
                         src="https://i.pinimg.com/736x/95/e3/fd/95e3fd0c539f5ddfe698b1554c6644bb.jpg"

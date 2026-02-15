@@ -6,6 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
 import StoriesPage from './pages/StoriesPage'
+import ContactPage from './pages/ContactPage'
 import DonorDashboard from './DonorDashboard/pages/DonorDashboard'
 import NGODashboard from './modules/NGODashboard/pages/NGODashboard'
 import AdminDashboard from './admin/AdminDashboard'
@@ -49,6 +50,7 @@ function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<AuthPage />} />
       <Route path="/stories" element={<StoriesPage />} />
+      <Route path="/contact" element={<ContactPage />} />
       <Route path="/donor-dashboard" element={<DonorDashboard />} />
       <Route path="/ngo-dashboard" element={<NGODashboard />} />
       <Route path="/admin-dashboard" element={<AdminDashboard />} />

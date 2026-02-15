@@ -5,22 +5,32 @@ import { gsap } from 'gsap'
 import 'leaflet/dist/leaflet.css'
 
 /* ── Custom marker icons using colored circles ── */
-const createIcon = (color) =>
-    L.divIcon({
+const createIcon = (color, label = '') => {
+    const size = label ? 24 : 14
+    return L.divIcon({
         className: '',
         html: `<div style="
-      width: 14px; height: 14px;
+      width: ${size}px; height: ${size}px;
       background: ${color};
       border: 2.5px solid #fff;
       border-radius: 50%;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    "></div>`,
-        iconSize: [14, 14],
-        iconAnchor: [7, 7],
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-family: sans-serif;
+      font-size: 11px;
+      line-height: 1;
+    ">${label}</div>`,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
     })
+}
 
-const ngoIcon = createIcon('#443c3c')
-const donorIcon = createIcon('#6c7483')
+const ngoIcon = createIcon('#443c3c', 'N')
+const donorIcon = createIcon('#6c7483', 'D')
 const listingIcon = createIcon('#6abf69')
 
 /* ── Map auto-fit sub-component ── */

@@ -10,6 +10,7 @@ export default function AcceptedPickups() {
         loading,
         errors,
         handleAssignDelivery,
+        handleReassignDelivery,
         handleUpdateDeliveryStatus,
         handleCancelClaim,
         fetchClaims,
@@ -33,11 +34,15 @@ export default function AcceptedPickups() {
     const availableVolunteers = volunteers.filter((v) => v.availability_status)
 
     const handleAssign = useCallback(
-        async (claimId, e) => {
+        async (claimId, deliveryId, e) => {
             if (!selectedVolunteer) return
             animateButtonPress(e.currentTarget)
             try {
-                await handleAssignDelivery(claimId, selectedVolunteer)
+                if (deliveryId) {
+                    await handleReassignDelivery(deliveryId, selectedVolunteer)
+                } else {
+                    await handleAssignDelivery(claimId, selectedVolunteer)
+                }
                 const row = e.currentTarget.closest('tr')
                 if (row) {
                     playSuccessRing(row)
@@ -49,7 +54,7 @@ export default function AcceptedPickups() {
                 /* handled in context */
             }
         },
-        [selectedVolunteer, handleAssignDelivery]
+        [selectedVolunteer, handleAssignDelivery, handleReassignDelivery]
     )
 
     const handleStatusUpdate = useCallback(
@@ -179,8 +184,23 @@ export default function AcceptedPickups() {
                                 </td>
                                 <td>{getStatusBadge(claim, delivery)}</td>
                                 <td>
-                                    {volunteerName ? (
-                                        <div className="ngo-cell-main">{volunteerName}</div>
+                                    {volunteerName && assigningClaimId !== claim.claim_id ? (
+                                        <div className="ngo-volunteer-cell">
+                                            <span className="ngo-cell-main">{volunteerName}</span>
+                                            {delivery && ['assigned', 'in_transit'].includes(delivery.delivery_status) && (
+                                                <button
+                                                    className="ngo-btn-icon-sm"
+                                                    onClick={() => {
+                                                        setAssigningClaimId(claim.claim_id)
+                                                        setSelectedVolunteer(delivery.volunteer_id || '')
+                                                    }}
+                                                    title="Change Volunteer"
+                                                    style={{ marginLeft: '8px', opacity: 0.6, cursor: 'pointer', background: 'none', border: 'none' }}
+                                                >
+                                                    ✎
+                                                </button>
+                                            )}
+                                        </div>
                                     ) : assigningClaimId === claim.claim_id ? (
                                         <div className="ngo-assign-inline">
                                             <select
@@ -197,7 +217,7 @@ export default function AcceptedPickups() {
                                             </select>
                                             <button
                                                 className="ngo-btn ngo-btn--sm ngo-btn--accept"
-                                                onClick={(e) => handleAssign(claim.claim_id, e)}
+                                                onClick={(e) => handleAssign(claim.claim_id, delivery?.delivery_id, e)}
                                                 disabled={!selectedVolunteer || loading.action}
                                             >
                                                 Go

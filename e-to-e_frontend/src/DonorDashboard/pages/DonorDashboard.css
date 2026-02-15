@@ -799,6 +799,162 @@
     border-bottom: 1px solid rgba(212, 204, 202, 0.25);
 }
 
+/* ── NGO Selection Step ── */
+.dd-step-container {
+    max-width: 900px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.dd-step-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.dd-step-title {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    color: var(--tundora);
+    margin: 0;
+}
+
+.dd-step-subtitle {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+.dd-step-back {
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    color: var(--pale-sky);
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dd-step-back:hover {
+    color: var(--tundora);
+    text-decoration: underline;
+}
+
+.dd-ngo-loading,
+.dd-ngo-empty {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    background: rgba(212, 204, 202, 0.1);
+    border-radius: 12px;
+}
+
+.dd-ngo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.dd-ngo-card {
+    background: var(--white);
+    border: 1px solid rgba(212, 204, 202, 0.3);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(68, 60, 60, 0.03);
+}
+
+.dd-ngo-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(68, 60, 60, 0.08);
+    border-color: var(--tundora);
+}
+
+.dd-ngo-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--swiss-coffee) 0%, #e0dbda 100%);
+    color: var(--tundora);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    font-family: var(--font-serif);
+}
+
+.dd-ngo-info {
+    margin-bottom: 20px;
+}
+
+.dd-ngo-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--tundora);
+    margin: 0 0 6px 0;
+    line-height: 1.3;
+}
+
+.dd-ngo-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.dd-ngo-select-btn {
+    margin-top: auto;
+    background: transparent;
+    border: 1px solid var(--boulder);
+    color: var(--tundora);
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.dd-ngo-card:hover .dd-ngo-select-btn {
+    background: var(--tundora);
+    color: var(--white);
+    border-color: var(--tundora);
+}
+
+.dd-selected-ngo-banner {
+    background: rgba(212, 204, 202, 0.15);
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    color: var(--tundora);
+    font-size: 0.95rem;
+    border-left: 4px solid var(--tundora);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .dd-table td {
     padding: 14px 18px;
     color: var(--text-primary);

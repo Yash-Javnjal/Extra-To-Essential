@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import { playSuccessAnimation } from '../animations/dashboardAnimations'
-import { createListing } from '../../lib/donorApi'
+import { createListing, getAllNGOs } from '../../lib/donorApi'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -41,6 +41,11 @@ function MapClickHandler({ onMapClick }) {
 }
 
 export default function DonationForm({ onSuccess }) {
+    const [step, setStep] = useState(1)
+    const [ngos, setNgos] = useState([])
+    const [loadingNgos, setLoadingNgos] = useState(true)
+    const [selectedNgo, setSelectedNgo] = useState(null)
+
     const [form, setForm] = useState({
         food_type: '',
         quantity_kg: '',
@@ -55,6 +60,16 @@ export default function DonationForm({ onSuccess }) {
     const [error, setError] = useState(null)
     const [success, setSuccess] = useState(false)
     const submitBtnRef = useRef(null)
+
+    /* ── Fetch NGOs on mount ── */
+    useState(() => {
+        getAllNGOs({ verified: true })
+            .then((res) => {
+                setNgos(res.ngos || [])
+            })
+            .catch(err => console.error('Failed to load NGOs', err))
+            .finally(() => setLoadingNgos(false))
+    }, [])
 
     const handleChange = (e) => {
         const { name, value } = e.target
@@ -124,6 +139,7 @@ export default function DonationForm({ onSuccess }) {
                 pickup_address: form.pickup_address,
                 latitude: form.latitude,
                 longitude: form.longitude,
+                assigned_ngo_id: selectedNgo?.ngo_id
             })
 
             playSuccessAnimation(submitBtnRef.current)
@@ -140,6 +156,8 @@ export default function DonationForm({ onSuccess }) {
                 longitude: null,
             })
             setMarkerPos(null)
+            setStep(1) // Reset to step 1
+            setSelectedNgo(null)
 
             if (onSuccess) onSuccess()
 
@@ -169,148 +187,193 @@ export default function DonationForm({ onSuccess }) {
         }
     }
 
-    return (
-        <form className="dd-donation-form" onSubmit={handleSubmit} id="donation-form">
-            <div className="dd-form-grid">
-                {/* Food Type */}
-                <div className="dd-form-group">
-                    <label htmlFor="food_type" className="dd-form-label">
-                        Food Type *
-                    </label>
-                    <select
-                        id="food_type"
-                        name="food_type"
-                        className="dd-form-select"
-                        value={form.food_type === 'Other' || FOOD_TYPES.includes(form.food_type) ? form.food_type : 'Other'}
-                        onChange={(e) => {
-                            if (e.target.value === 'Other') {
-                                setForm((prev) => ({ ...prev, food_type: '' }))
-                            } else {
-                                handleChange(e)
-                            }
-                        }}
-                    >
-                        <option value="">Select food type</option>
-                        {FOOD_TYPES.map((t) => (
-                            <option key={t} value={t}>
-                                {t}
-                            </option>
+    /* ── Render Step 1: Select NGO ── */
+    if (step === 1) {
+        return (
+            <div className="dd-step-container">
+                <h2 className="dd-step-title">Step 1: Select an NGO</h2>
+                <p className="dd-step-subtitle">Choose which NGO you would like to donate to.</p>
+
+                {loadingNgos ? (
+                    <div className="dd-ngo-loading">Loading NGOs...</div>
+                ) : ngos.length === 0 ? (
+                    <div className="dd-ngo-empty">No verified NGOs found.</div>
+                ) : (
+                    <div className="dd-ngo-grid">
+                        {ngos.map(ngo => (
+                            <div key={ngo.ngo_id} className="dd-ngo-card" onClick={() => {
+                                setSelectedNgo(ngo)
+                                setStep(2)
+                            }}>
+                                <div className="dd-ngo-avatar">
+                                    {ngo.ngo_name.charAt(0)}
+                                </div>
+                                <div className="dd-ngo-info">
+                                    <h3 className="dd-ngo-name">{ngo.ngo_name}</h3>
+                                    <p className="dd-ngo-meta">{ngo.city} • {ngo.service_radius_km}km</p>
+                                </div>
+                                <button className="dd-ngo-select-btn" type="button">Select</button>
+                            </div>
                         ))}
-                    </select>
-
-                    {/* Show text input if 'Other' is selected or custom value entered */}
-                    {(form.food_type === '' || (form.food_type && !FOOD_TYPES.includes(form.food_type))) && (
-                        <input
-                            type="text"
-                            name="food_type"
-                            className="dd-form-input"
-                            placeholder="Enter custom food type"
-                            value={form.food_type}
-                            onChange={handleChange}
-                            style={{ marginTop: '0.5rem' }}
-                        />
-                    )}
-                </div>
-
-                {/* Quantity */}
-                <div className="dd-form-group">
-                    <label htmlFor="quantity_kg" className="dd-form-label">
-                        Quantity (kg) *
-                    </label>
-                    <input
-                        id="quantity_kg"
-                        name="quantity_kg"
-                        type="number"
-                        min="0.5"
-                        step="0.5"
-                        className="dd-form-input"
-                        placeholder="e.g. 5"
-                        value={form.quantity_kg}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/* Meal Equivalent */}
-                <div className="dd-form-group">
-                    <label htmlFor="meal_equivalent" className="dd-form-label">
-                        Meal Equivalent *
-                    </label>
-                    <input
-                        id="meal_equivalent"
-                        name="meal_equivalent"
-                        type="number"
-                        min="1"
-                        className="dd-form-input"
-                        placeholder="Number of meals"
-                        value={form.meal_equivalent}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/* Expiry Time */}
-                <div className="dd-form-group">
-                    <label htmlFor="expiry_time" className="dd-form-label">
-                        Expiry Time *
-                    </label>
-                    <input
-                        id="expiry_time"
-                        name="expiry_time"
-                        type="datetime-local"
-                        className="dd-form-input"
-                        value={form.expiry_time}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/* Map Picker */}
-                {/* Divider before map */}
-                <div className="dd-form-divider" />
-
-                <div className="dd-form-group dd-form-group--full">
-                    <label className="dd-form-label">
-                        Pickup Location * — Click the map
-                    </label>
-                    <div className="dd-map-picker-wrapper">
-                        <MapContainer
-                            center={[17.6599, 75.9064]}
-                            zoom={13}
-                            className="dd-map-picker"
-                            scrollWheelZoom={true}
-                        >
-                            <TileLayer
-                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                            />
-                            <MapClickHandler onMapClick={handleMapClick} />
-                            {markerPos && <Marker position={markerPos} />}
-                        </MapContainer>
                     </div>
-                    {form.pickup_address && (
-                        <div className="dd-map-address">
-                            <span className="dd-map-address__icon">—</span>
-                            <span className="dd-map-address__text">{form.pickup_address}</span>
-                        </div>
-                    )}
-                </div>
+                )}
+            </div>
+        )
+    }
+
+    /* ── Render Step 2: Form ── */
+    return (
+        <div className="dd-step-container">
+            <div className="dd-step-header">
+                <button className="dd-step-back" onClick={() => setStep(1)} type="button">← Back to NGOs</button>
+                <h2 className="dd-step-title">Step 2: Donation Details</h2>
+            </div>
+            <div className="dd-selected-ngo-banner">
+                Donating to: <strong>{selectedNgo.ngo_name}</strong>
             </div>
 
-            {/* Feedback */}
-            {error && <div className="dd-form-error">{error}</div>}
-            {success && (
-                <div className="dd-form-success">
-                    ✓ Donation created successfully! Thank you for your generosity.
-                </div>
-            )}
+            <form className="dd-donation-form" onSubmit={handleSubmit} id="donation-form">
+                <div className="dd-form-grid">
+                    {/* Food Type */}
+                    <div className="dd-form-group">
+                        <label htmlFor="food_type" className="dd-form-label">
+                            Food Type *
+                        </label>
+                        <select
+                            id="food_type"
+                            name="food_type"
+                            className="dd-form-select"
+                            value={form.food_type === 'Other' || FOOD_TYPES.includes(form.food_type) ? form.food_type : 'Other'}
+                            onChange={(e) => {
+                                if (e.target.value === 'Other') {
+                                    setForm((prev) => ({ ...prev, food_type: '' }))
+                                } else {
+                                    handleChange(e)
+                                }
+                            }}
+                        >
+                            <option value="">Select food type</option>
+                            {FOOD_TYPES.map((t) => (
+                                <option key={t} value={t}>
+                                    {t}
+                                </option>
+                            ))}
+                        </select>
 
-            {/* Submit */}
-            <button
-                type="submit"
-                className="btn btn--primary dd-form-submit"
-                disabled={submitting}
-                ref={submitBtnRef}
-            >
-                {submitting ? 'Creating Donation…' : 'Create Donation'}
-            </button>
-        </form>
+                        {/* Show text input if 'Other' is selected or custom value entered */}
+                        {(form.food_type === '' || (form.food_type && !FOOD_TYPES.includes(form.food_type))) && (
+                            <input
+                                type="text"
+                                name="food_type"
+                                className="dd-form-input"
+                                placeholder="Enter custom food type"
+                                value={form.food_type}
+                                onChange={handleChange}
+                                style={{ marginTop: '0.5rem' }}
+                            />
+                        )}
+                    </div>
+
+                    {/* Quantity */}
+                    <div className="dd-form-group">
+                        <label htmlFor="quantity_kg" className="dd-form-label">
+                            Quantity (kg) *
+                        </label>
+                        <input
+                            id="quantity_kg"
+                            name="quantity_kg"
+                            type="number"
+                            min="0.5"
+                            step="0.5"
+                            className="dd-form-input"
+                            placeholder="e.g. 5"
+                            value={form.quantity_kg}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    {/* Meal Equivalent */}
+                    <div className="dd-form-group">
+                        <label htmlFor="meal_equivalent" className="dd-form-label">
+                            Meal Equivalent *
+                        </label>
+                        <input
+                            id="meal_equivalent"
+                            name="meal_equivalent"
+                            type="number"
+                            min="1"
+                            className="dd-form-input"
+                            placeholder="Number of meals"
+                            value={form.meal_equivalent}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    {/* Expiry Time */}
+                    <div className="dd-form-group">
+                        <label htmlFor="expiry_time" className="dd-form-label">
+                            Expiry Time *
+                        </label>
+                        <input
+                            id="expiry_time"
+                            name="expiry_time"
+                            type="datetime-local"
+                            className="dd-form-input"
+                            value={form.expiry_time}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    {/* Map Picker */}
+                    {/* Divider before map */}
+                    <div className="dd-form-divider" />
+
+                    <div className="dd-form-group dd-form-group--full">
+                        <label className="dd-form-label">
+                            Pickup Location * — Click the map
+                        </label>
+                        <div className="dd-map-picker-wrapper">
+                            <MapContainer
+                                center={[17.6599, 75.9064]}
+                                zoom={13}
+                                className="dd-map-picker"
+                                scrollWheelZoom={true}
+                            >
+                                <TileLayer
+                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                                />
+                                <MapClickHandler onMapClick={handleMapClick} />
+                                {markerPos && <Marker position={markerPos} />}
+                            </MapContainer>
+                        </div>
+                        {form.pickup_address && (
+                            <div className="dd-map-address">
+                                <span className="dd-map-address__icon">—</span>
+                                <span className="dd-map-address__text">{form.pickup_address}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Feedback */}
+                {error && <div className="dd-form-error">{error}</div>}
+                {success && (
+                    <div className="dd-form-success">
+                        ✓ Donation created successfully! Thank you for your generosity.
+                    </div>
+                )}
+
+                {/* Submit */}
+                <button
+                    type="submit"
+                    className="btn btn--primary dd-form-submit"
+                    disabled={submitting}
+                    ref={submitBtnRef}
+                >
+                    {submitting ? 'Creating Donation…' : 'Create Donation'}
+                </button>
+            </form>
+        </div>
     )
 }

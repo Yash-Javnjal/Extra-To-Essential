@@ -248,6 +248,25 @@ export function NGOProvider({ children }) {
         [addNotification, addLog, fetchClaims, fetchDeliveries, fetchVolunteers]
     )
 
+    const handleReassignDelivery = useCallback(
+        async (deliveryId, volunteerId) => {
+            setLoading((l) => ({ ...l, action: true }))
+            try {
+                const result = await api.reassignVolunteer(deliveryId, volunteerId)
+                addNotification('success', 'Volunteer reassigned successfully')
+                addLog('delivery_reassigned', { delivery_id: deliveryId, volunteer_id: volunteerId })
+                await Promise.all([fetchClaims(), fetchDeliveries(), fetchVolunteers()])
+                return result
+            } catch (err) {
+                addNotification('error', err.message || 'Failed to reassign volunteer')
+                throw err
+            } finally {
+                setLoading((l) => ({ ...l, action: false }))
+            }
+        },
+        [addNotification, addLog, fetchClaims, fetchDeliveries, fetchVolunteers]
+    )
+
     const handleUpdateDeliveryStatus = useCallback(
         async (deliveryId, status, extras = {}) => {
             setLoading((l) => ({ ...l, action: true }))
@@ -408,6 +427,7 @@ export function NGOProvider({ children }) {
         handleUpdateVolunteer,
         handleRemoveVolunteer,
         handleAssignDelivery,
+        handleReassignDelivery,
         handleUpdateDeliveryStatus,
         handleCancelClaim,
 

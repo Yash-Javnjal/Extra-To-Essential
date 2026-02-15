@@ -48,6 +48,11 @@ export async function getDonorImpact() {
     return apiFetch('/donors/me/impact')
 }
 
+export async function getAllNGOs(params = {}) {
+    const query = new URLSearchParams(params).toString()
+    return apiFetch(`/ngos?${query}`)
+}
+
 /* ─── Food Listings ─── */
 
 export async function createListing(listingData) {

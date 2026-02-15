@@ -157,7 +157,7 @@ Start backend:
 ```
 
 cd E-to-E_backend
-npm install nodemon express socket.io firebase-admin nodemailer dotenv cors
+npm install 
 npm start
 
 ```
@@ -167,7 +167,7 @@ Start frontend:
 ```
 
 cd ../e-to-e_frontend
-npm install react react-router-dom gsap framer-motion leaflet react-leaflet @supabase/supabase-js lucide-react lenis
+npm install 
 npm run dev
 
 ```

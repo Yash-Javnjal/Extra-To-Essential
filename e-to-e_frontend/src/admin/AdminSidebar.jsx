@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { gsap } from 'gsap'
-import { logoutUser } from '../lib/adminApi'
+import { useAuth } from '../context/AuthContext'
 import {
     BarChart3,
     Activity,
@@ -26,6 +26,7 @@ const NAV_ITEMS = [
 export default function AdminSidebar({ activeSection, onNavigate, user, stats, isOpen }) {
     const sidebarRef = useRef(null)
     const navigate = useNavigate()
+    const auth = useAuth()
     const [loggingOut, setLoggingOut] = useState(false)
     const animatedRef = useRef(false)
 
@@ -53,12 +54,7 @@ export default function AdminSidebar({ activeSection, onNavigate, user, stats, i
 
     const handleLogout = async () => {
         setLoggingOut(true)
-        try {
-            await logoutUser()
-        } catch (e) {
-            console.error('Logout error:', e)
-        }
-        navigate('/login')
+        await auth.logout()
     }
 
     return (

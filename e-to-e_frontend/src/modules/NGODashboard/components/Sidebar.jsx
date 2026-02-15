@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNGO } from '../context/NGOContext'
+import { useAuth } from '../../../context/AuthContext'
 
 const NAV_ITEMS = [
     { key: 'overview', label: 'Overview', icon: '⬡' },
@@ -12,6 +13,7 @@ const NAV_ITEMS = [
 
 export default function Sidebar({ activeView, onViewChange, collapsed, onToggleCollapse }) {
     const { ngoProfile, user, stats } = useNGO()
+    const auth = useAuth()
     const [mobileOpen, setMobileOpen] = useState(false)
     const sidebarRef = useRef(null)
 
@@ -38,10 +40,8 @@ export default function Sidebar({ activeView, onViewChange, collapsed, onToggleC
         setMobileOpen(false)
     }
 
-    function handleLogout() {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
-        window.location.href = '/login'
+    async function handleLogout() {
+        await auth.logout()
     }
 
     const badgeMap = {

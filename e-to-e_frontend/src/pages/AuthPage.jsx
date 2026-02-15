@@ -1,12 +1,20 @@
 import { useRef, useCallback, useState } from 'react'
+import { Navigate } from 'react-router-dom'
 import { gsap } from 'gsap'
+import { useAuth } from '../context/AuthContext'
 import AuthImage from '../components/AuthImage'
 import { LoginForm, RegisterForm } from '../components/AuthPanel'
 import './AuthPage.css'
 
 function AuthPage() {
+    const { isAuthenticated, user, loading, getDashboardPath } = useAuth()
     const [isRegister, setIsRegister] = useState(false)
     const animatingRef = useRef(false)
+
+    // If already logged in, redirect to dashboard
+    if (!loading && isAuthenticated && user) {
+        return <Navigate to={getDashboardPath(user.role)} replace />
+    }
 
     // Refs
     const imagePanelRef = useRef(null)

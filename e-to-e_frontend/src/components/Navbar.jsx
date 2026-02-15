@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
+import { useAuth } from '../context/AuthContext'
 import './Navbar.css'
 
 const Navbar = () => {
@@ -9,6 +10,7 @@ const Navbar = () => {
     const navRef = useRef(null)
     const logoRef = useRef(null)
     const linksRef = useRef(null)
+    const { isAuthenticated, user, getDashboardPath } = useAuth()
 
     useEffect(() => {
         const handleScroll = () => {
@@ -86,9 +88,15 @@ const Navbar = () => {
 
                 </div>
 
-                <Link to="/login" className="nav__cta btn btn--primary">
-                    Join Us
-                </Link>
+                {isAuthenticated && user ? (
+                    <Link to={getDashboardPath(user.role)} className="nav__cta btn btn--primary">
+                        Dashboard
+                    </Link>
+                ) : (
+                    <Link to="/login" className="nav__cta btn btn--primary">
+                        Join Us
+                    </Link>
+                )}
 
                 <button
                     className={`nav__hamburger ${menuOpen ? 'nav__hamburger--active' : ''}`}

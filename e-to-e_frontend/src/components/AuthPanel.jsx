@@ -2,9 +2,11 @@ import { useEffect, useRef, forwardRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { useNavigate } from 'react-router-dom'
 import { loginUser, registerUser, createDonorProfile, createNGOProfile } from '../lib/api'
+import { useAuth } from '../context/AuthContext'
 import StepIndicator from './auth/StepIndicator'
 import RoleSelector from './auth/RoleSelector'
 import LocationPicker from './auth/LocationPicker'
+
 
 /* ─── Country Codes Data ─── */
 const COUNTRY_CODES = [
@@ -51,6 +53,7 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle }, ref) {
     const toggleRef = useRef(null)
 
     const navigate = useNavigate()
+    const auth = useAuth()
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -144,25 +147,13 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle }, ref) {
         setLoading(true)
         try {
             const data = await loginUser({ email, password })
-            const role = data.user?.role
+
+            // Sync auth state globally so ProtectedRoute sees the user immediately
+            auth.login(data.user, data.session)
 
             // Redirect based on role
-            switch (role) {
-                case 'admin':
-                    navigate('/admin-dashboard')
-                    break
-                case 'ngo':
-                    navigate('/ngo-dashboard')
-                    break
-                case 'donor':
-                    navigate('/donor-dashboard')
-                    break
-                case 'volunteer':
-                    navigate('/ngo-dashboard')
-                    break
-                default:
-                    navigate('/')
-            }
+            const role = data.user?.role
+            navigate(auth.getDashboardPath(role))
         } catch (err) {
             setError(err.message || 'Login failed. Check your credentials.')
         } finally {
@@ -260,6 +251,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
     ref
 ) {
     const navigate = useNavigate()
+    const auth = useAuth()
 
     /* Step state */
     const [step, setStep] = useState(1) // 1 = common, 2 = role-specific
@@ -374,6 +366,8 @@ export const RegisterForm = forwardRef(function RegisterForm(
                     organization_name: organizationName || null,
                 })
                 setRegisteredUserId(data.user?.id)
+                // Sync auth state so ProtectedRoute works
+                auth.login(data.user, data.session)
                 // Navigate to step 2 to show success
                 setStep(2)
             } catch (err) {
@@ -396,6 +390,8 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 organization_name: organizationName || null,
             })
             setRegisteredUserId(data.user?.id)
+            // Sync auth state so ProtectedRoute works
+            auth.login(data.user, data.session)
             setStep(2)
 
             // Animate step 2 entrance
@@ -449,7 +445,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 longitude: donorLng,
                 csr_participant: csrParticipant,
             })
-            navigate('/donor-dashboard')
+            navigate(auth.getDashboardPath('donor'))
         } catch (err) {
             setError(err.message || 'Failed to create donor profile.')
         } finally {
@@ -483,7 +479,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 longitude: ngoLng,
                 service_radius_km: serviceRadius,
             })
-            navigate('/ngo-dashboard')
+            navigate(auth.getDashboardPath('ngo'))
         } catch (err) {
             setError(err.message || 'Failed to create NGO profile.')
         } finally {
@@ -495,12 +491,12 @@ export const RegisterForm = forwardRef(function RegisterForm(
     const handleVolunteerComplete = () => {
         // Volunteers don't need a separate profile table entry for now
         // They are already registered with role=volunteer in profiles
-        navigate('/ngo-dashboard')
+        navigate(auth.getDashboardPath('volunteer'))
     }
 
     /* ── Step 2 — Admin (already registered, just redirect) ── */
     const handleAdminComplete = () => {
-        navigate('/admin-dashboard')
+        navigate(auth.getDashboardPath('admin'))
     }
 
     /* ── Render ── */

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { useNavigate } from 'react-router-dom'
-import { logoutUser } from '../../lib/donorApi'
+import { useAuth } from '../../context/AuthContext'
 
 const NAV_ITEMS = [
     {
@@ -56,6 +56,7 @@ const NAV_ITEMS = [
 
 export default function Sidebar({ activeSection, onNavigate, user, collapsed, onToggleCollapse }) {
     const navigate = useNavigate()
+    const auth = useAuth()
     const sidebarRef = useRef(null)
     const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -84,14 +85,7 @@ export default function Sidebar({ activeSection, onNavigate, user, collapsed, on
     const role = user?.role || 'donor'
 
     const handleLogout = async () => {
-        try {
-            await logoutUser()
-        } catch {
-            // Clear tokens even if backend call fails
-            localStorage.removeItem('access_token')
-            localStorage.removeItem('refresh_token')
-        }
-        navigate('/login')
+        await auth.logout()
     }
 
     const handleMobileNav = (id) => {

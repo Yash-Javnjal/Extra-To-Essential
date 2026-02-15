@@ -3,7 +3,8 @@ const router = express.Router();
 const { supabaseAdmin } = require('../config/supabaseClient');
 const { authenticateUser } = require('../middleware/authMiddleware');
 const { ngoOnly } = require('../middleware/roleGuards');
-const { sendClaimAlert } = require('../services/notificationService');
+const { sendClaimAlert, sendDeliveryAlert } = require('../services/notificationService');
+const { findBestVolunteer } = require('../services/volunteerService');
 
 /**
  * POST /api/claims
@@ -46,8 +47,8 @@ router.post('/', authenticateUser, ngoOnly, async (req, res) => {
     }
     console.log('[CLAIMS] Listing:', listing.listing_id, 'status:', listing.status, 'locked:', listing.is_locked);
 
-    if (['completed', 'expired'].includes(listing.status)) {
-      return res.status(400).json({ error: 'Listing is not available', current_status: listing.status });
+    if (['claimed', 'completed', 'expired'].includes(listing.status)) {
+      return res.status(400).json({ error: 'Listing is already occupied', current_status: listing.status });
     }
 
     // ─── Try RPC function first (single DB call, no trigger issues) ───
@@ -69,7 +70,37 @@ router.post('/', authenticateUser, ngoOnly, async (req, res) => {
         }
       } catch (_) { }
 
-      return res.status(201).json({ message: 'Listing claimed successfully', claim: rpcResult });
+      // ─── Auto-Assign Volunteer ───
+      let assignedDelivery = null;
+      try {
+        const bestVolunteer = await findBestVolunteer(ngo.ngo_id);
+        if (bestVolunteer) {
+          console.log('[CLAIMS] Auto-assigning volunteer:', bestVolunteer.full_name);
+          const { data: delivery, error: delErr } = await supabaseAdmin
+            .from('deliveries')
+            .insert({
+              claim_id: rpcResult.claim_id,
+              volunteer_id: bestVolunteer.volunteer_id,
+              delivery_status: 'assigned'
+            })
+            .select()
+            .single();
+
+          if (!delErr && delivery) {
+            assignedDelivery = { ...delivery, volunteer: bestVolunteer };
+            // Send notification to volunteer
+            sendDeliveryAlert(ngo.phone || 'NGO_ADMIN', bestVolunteer.full_name, 'assigned').catch(() => { });
+          }
+        }
+      } catch (volErr) {
+        console.error('[CLAIMS] Auto-assignment failed:', volErr);
+      }
+
+      return res.status(201).json({
+        message: 'Listing claimed successfully',
+        claim: rpcResult,
+        delivery: assignedDelivery
+      });
     }
 
     // ─── Fallback: direct operations ───
@@ -122,7 +153,37 @@ router.post('/', authenticateUser, ngoOnly, async (req, res) => {
       }
     } catch (_) { }
 
-    return res.status(201).json({ message: 'Listing claimed successfully', claim });
+    // ─── Auto-Assign Volunteer (Fallback Path) ───
+    let assignedDelivery = null;
+    try {
+      const bestVolunteer = await findBestVolunteer(ngo.ngo_id);
+      if (bestVolunteer) {
+        console.log('[CLAIMS] Auto-assigning volunteer (fallback):', bestVolunteer.full_name);
+        const { data: delivery, error: delErr } = await supabaseAdmin
+          .from('deliveries')
+          .insert({
+            claim_id: claim.claim_id,
+            volunteer_id: bestVolunteer.volunteer_id,
+            delivery_status: 'assigned'
+          })
+          .select()
+          .single();
+
+        if (!delErr && delivery) {
+          assignedDelivery = { ...delivery, volunteer: bestVolunteer };
+          // Send notification to volunteer
+          sendDeliveryAlert(ngo.phone || 'NGO_ADMIN', bestVolunteer.full_name, 'assigned').catch(() => { });
+        }
+      }
+    } catch (volErr) {
+      console.error('[CLAIMS] Auto-assignment failed (fallback):', volErr);
+    }
+
+    return res.status(201).json({
+      message: 'Listing claimed successfully',
+      claim,
+      delivery: assignedDelivery
+    });
 
   } catch (error) {
     console.error('[CLAIMS] Unhandled error:', error);

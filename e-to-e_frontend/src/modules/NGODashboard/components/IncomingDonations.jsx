@@ -131,7 +131,7 @@ export default function IncomingDonations() {
                                         onClick={(e) => handleAccept(listing, e)}
                                         disabled={loading.action}
                                     >
-                                        Accept
+                                        {loading.action ? 'Accepting...' : 'Accept'}
                                     </button>
                                 </div>
                             </td>

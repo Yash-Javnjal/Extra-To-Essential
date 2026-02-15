@@ -86,7 +86,7 @@ export function NGOProvider({ children }) {
     }, [])
 
     const fetchListings = useCallback(async () => {
-        setLoading((l) => ({ ...l, listings: true }))
+        if (listings.length === 0) setLoading((l) => ({ ...l, listings: true }))
         try {
             const data = await api.getAvailableListings()
             setListings(data.listings || [])
@@ -96,10 +96,10 @@ export function NGOProvider({ children }) {
         } finally {
             setLoading((l) => ({ ...l, listings: false }))
         }
-    }, [])
+    }, [listings.length])
 
     const fetchClaims = useCallback(async () => {
-        setLoading((l) => ({ ...l, claims: true }))
+        if (claims.length === 0) setLoading((l) => ({ ...l, claims: true }))
         try {
             const data = await api.getMyClaims()
             setClaims(data.claims || [])
@@ -109,10 +109,10 @@ export function NGOProvider({ children }) {
         } finally {
             setLoading((l) => ({ ...l, claims: false }))
         }
-    }, [])
+    }, [claims.length])
 
     const fetchVolunteers = useCallback(async () => {
-        setLoading((l) => ({ ...l, volunteers: true }))
+        if (volunteers.length === 0) setLoading((l) => ({ ...l, volunteers: true }))
         try {
             const data = await api.getVolunteers()
             setVolunteers(data.volunteers || [])
@@ -122,10 +122,10 @@ export function NGOProvider({ children }) {
         } finally {
             setLoading((l) => ({ ...l, volunteers: false }))
         }
-    }, [])
+    }, [volunteers.length])
 
     const fetchDeliveries = useCallback(async () => {
-        setLoading((l) => ({ ...l, deliveries: true }))
+        if (deliveries.length === 0) setLoading((l) => ({ ...l, deliveries: true }))
         try {
             const data = await api.getMyDeliveries()
             setDeliveries(data.deliveries || [])
@@ -135,7 +135,7 @@ export function NGOProvider({ children }) {
         } finally {
             setLoading((l) => ({ ...l, deliveries: false }))
         }
-    }, [])
+    }, [deliveries.length])
 
     const fetchImpact = useCallback(async () => {
         try {
@@ -162,7 +162,7 @@ export function NGOProvider({ children }) {
                 })
                 addNotification('success', 'Donation claimed successfully')
                 addLog('claim_created', { listing_id: listingId, claim_id: result.claim?.claim_id })
-                await Promise.all([fetchListings(), fetchClaims()])
+                await Promise.all([fetchListings(), fetchClaims(), fetchDeliveries(), fetchVolunteers()])
                 return result
             } catch (err) {
                 addNotification('error', err.message || 'Failed to claim donation')
@@ -292,7 +292,7 @@ export function NGOProvider({ children }) {
         ).length,
         availableVolunteers: volunteers.filter((v) => v.availability_status).length,
         completedPickups: deliveries.filter((d) => d.delivery_status === 'delivered').length,
-        pendingRequests: claims.filter((c) => c.status === 'claimed').length,
+        pendingRequests: listings.length,
     }
 
     /* ─── Initial Load ─── */

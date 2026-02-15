@@ -114,7 +114,7 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle }, ref) {
             // Redirect based on role
             switch (role) {
                 case 'admin':
-                    navigate('/') // admin dashboard not built yet
+                    navigate('/admin-dashboard')
                     break
                 case 'ngo':
                     navigate('/ngo-dashboard')
@@ -422,7 +422,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
 
     /* ── Step 2 — Admin (already registered, just redirect) ── */
     const handleAdminComplete = () => {
-        navigate('/') // admin dashboard not built yet
+        navigate('/admin-dashboard')
     }
 
     /* ── Render ── */

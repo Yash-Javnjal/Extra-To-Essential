@@ -8,6 +8,7 @@ import AuthPage from './pages/AuthPage'
 import StoriesPage from './pages/StoriesPage'
 import DonorDashboard from './DonorDashboard/pages/DonorDashboard'
 import NGODashboard from './modules/NGODashboard/pages/NGODashboard'
+import AdminDashboard from './admin/AdminDashboard'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -50,6 +51,7 @@ function App() {
       <Route path="/stories" element={<StoriesPage />} />
       <Route path="/donor-dashboard" element={<DonorDashboard />} />
       <Route path="/ngo-dashboard" element={<NGODashboard />} />
+      <Route path="/admin-dashboard" element={<AdminDashboard />} />
     </Routes>
   )
 }

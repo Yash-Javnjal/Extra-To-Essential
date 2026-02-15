@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import './LiveDashboard.css'
+import EssenceLine from './EssenceLine'
+import CinematicFooter from './CinematicFooter'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -103,43 +105,57 @@ const LiveDashboard = () => {
 
     useEffect(() => {
         const ctx = gsap.context(() => {
-            // Section title animation
-            gsap.fromTo('.dashboard__label, .dashboard__title, .dashboard__subtitle',
-                { y: 40, autoAlpha: 0 },
+            // 1. Essence Line expands
+            gsap.fromTo('.dashboard-essence-line',
+                { scaleX: 0, opacity: 0 },
                 {
-                    y: 0,
-                    autoAlpha: 1,
-                    duration: 0.8,
-                    stagger: 0.15,
-                    ease: 'power3.out',
+                    scaleX: 1,
+                    opacity: 1,
+                    duration: 1.8,
+                    ease: 'expo.inOut',
                     scrollTrigger: {
                         trigger: sectionRef.current,
                         start: 'top 80%',
-                        toggleActions: 'play none none reverse',
+                    }
+                }
+            )
+
+            // 2. Text Reveal (Staggered)
+            gsap.fromTo('.dashboard__label, .dashboard__title, .dashboard__subtitle',
+                { y: 50, autoAlpha: 0 },
+                {
+                    y: 0,
+                    autoAlpha: 1,
+                    duration: 1.2,
+                    stagger: 0.2,
+                    ease: 'power4.out',
+                    scrollTrigger: {
+                        trigger: sectionRef.current,
+                        start: 'top 75%',
                     },
                 }
             )
 
-            // Animate cards
+            // 3. Cards Materialize (Upward drift + Fade)
             cardsRef.current.forEach((card, i) => {
                 gsap.fromTo(card,
-                    { y: 60, autoAlpha: 0 },
+                    { y: 80, autoAlpha: 0, scale: 0.95 },
                     {
                         y: 0,
                         autoAlpha: 1,
-                        duration: 0.8,
-                        delay: i * 0.15,
-                        ease: 'power3.out',
+                        scale: 1,
+                        duration: 1.4,
+                        delay: i * 0.15, // Cinematic stagger
+                        ease: 'power4.out',
                         scrollTrigger: {
                             trigger: sectionRef.current,
-                            start: 'top 75%',
-                            toggleActions: 'play none none reverse',
+                            start: 'top 70%',
                         },
                     }
                 )
             })
 
-            // Counter animation
+            // 4. Numbers Count Up (Slow, authoritative)
             CARD_META.forEach((card, i) => {
                 const valueEl = cardsRef.current[i]?.querySelector('.stat-card__value-num')
                 if (!valueEl) return
@@ -149,19 +165,17 @@ const LiveDashboard = () => {
 
                 gsap.to(obj, {
                     val: targetVal,
-                    duration: 2,
-                    delay: 0.2 + (i * 0.1),
+                    duration: 3.5, // Slow build-up
+                    delay: 0.5 + (i * 0.2),
                     ease: 'power2.out',
                     scrollTrigger: {
                         trigger: sectionRef.current,
-                        start: 'top 75%',
-                        toggleActions: 'play none none reverse',
+                        start: 'top 70%',
                     },
                     onUpdate: () => {
                         if (targetVal >= 1000) {
                             valueEl.textContent = Math.round(obj.val).toLocaleString()
                         } else if (card.id === 'co2') {
-                            // Show decimals for small CO2 values (Tonnes)
                             valueEl.textContent = parseFloat(obj.val.toFixed(2))
                         } else {
                             valueEl.textContent = Math.round(obj.val * 10) / 10
@@ -177,6 +191,9 @@ const LiveDashboard = () => {
     return (
         <section ref={sectionRef} className="dashboard section section--coffee" id="about">
             <div className="container">
+                {/* Signature Essence Line */}
+                <EssenceLine className="dashboard-essence-line" width="60px" color="var(--tundora)" delay={0.2} />
+
                 <div className="text-center">
                     <span className="section__label dashboard__label">Live Impact</span>
                     <h2 className="section__title dashboard__title">Our Dashboard</h2>
@@ -185,7 +202,7 @@ const LiveDashboard = () => {
                     </p>
                 </div>
 
-                <div className="dashboard__grid">
+                <div className="dashboard__grid" style={{ marginTop: '4rem' }}>
                     {CARD_META.map((card, i) => (
                         <div
                             key={card.id}

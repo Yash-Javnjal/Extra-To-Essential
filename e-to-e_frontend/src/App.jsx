@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import Lenis from 'lenis'
 import { gsap } from 'gsap'
@@ -14,6 +14,7 @@ import NGODashboard from './modules/NGODashboard/pages/NGODashboard'
 import AdminDashboard from './admin/AdminDashboard'
 import VolunteerPage from './pages/VolunteerPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import CinematicPreloader from './components/CinematicPreloader'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -26,6 +27,7 @@ const DASHBOARD_PREFIXES = ['/donor-dashboard', '/ngo-dashboard', '/admin-dashbo
 function App() {
   const lenisRef = useRef(null)
   const location = useLocation()
+  const [loading, setLoading] = useState(true)
 
   const isDashboard = DASHBOARD_PREFIXES.some((p) =>
     location.pathname.startsWith(p)
@@ -70,42 +72,54 @@ function App() {
   }, [isDashboard])
 
   return (
-    <Routes>
-      {/* ── Public routes ── */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<AuthPage />} />
-      <Route path="/stories" element={<StoriesPage />} />
-      <Route path="/contact" element={<ContactPage />} />
+    <>
+      {loading && (
+        <CinematicPreloader onComplete={() => setLoading(false)} />
+      )}
+      {/* While loading, we can keep the app content hidden or let it mount in background.
+          For a portal reveal, content needs to be rendered but maybe covered. 
+          The preloader is z-index 9999 over everything. 
+          When loading is false, preloader unmounts. */}
 
-      {/* ── Protected dashboard routes ── */}
-      <Route
-        path="/donor-dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['donor']}>
-            <DonorDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/ngo-dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['ngo', 'volunteer']}>
-            <NGODashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin-dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
+      <div style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
+        <Routes>
+          {/* ── Public routes ── */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/stories" element={<StoriesPage />} />
+          <Route path="/contact" element={<ContactPage />} />
 
-      {/* ── 404 catch-all ── */}
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+          {/* ── Protected dashboard routes ── */}
+          <Route
+            path="/donor-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['donor']}>
+                <DonorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ngo-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['ngo', 'volunteer']}>
+                <NGODashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ── 404 catch-all ── */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </div>
+    </>
   )
 }
 

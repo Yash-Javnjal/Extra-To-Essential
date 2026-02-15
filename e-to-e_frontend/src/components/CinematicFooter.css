@@ -1,0 +1,41 @@
+.cinematic-footer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 1rem;
+    gap: 12px;
+    opacity: 0;
+    margin-top: 4rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.cf-text {
+    font-family: var(--font-serif, serif);
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--boulder, #757575);
+}
+
+.cf-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background-color: var(--swiss-coffee, #d4ccca);
+}
+
+.cf-names {
+    font-family: var(--font-sans, sans-serif);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--tundora, #1a1a1a);
+}
+
+.cf-team {
+    font-family: var(--font-sans, sans-serif);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted, #999);
+}

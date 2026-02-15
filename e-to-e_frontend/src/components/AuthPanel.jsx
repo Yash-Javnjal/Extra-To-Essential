@@ -6,6 +6,40 @@ import StepIndicator from './auth/StepIndicator'
 import RoleSelector from './auth/RoleSelector'
 import LocationPicker from './auth/LocationPicker'
 
+/* ─── Country Codes Data ─── */
+const COUNTRY_CODES = [
+    { code: '+91', country: 'India', flag: '🇮🇳' },
+    { code: '+1', country: 'United States', flag: '🇺🇸' },
+    { code: '+44', country: 'United Kingdom', flag: '🇬🇧' },
+    { code: '+61', country: 'Australia', flag: '🇦🇺' },
+    { code: '+81', country: 'Japan', flag: '🇯🇵' },
+    { code: '+49', country: 'Germany', flag: '🇩🇪' },
+    { code: '+33', country: 'France', flag: '🇫🇷' },
+    { code: '+86', country: 'China', flag: '🇨🇳' },
+    { code: '+971', country: 'UAE', flag: '🇦🇪' },
+    { code: '+65', country: 'Singapore', flag: '🇸🇬' },
+    { code: '+60', country: 'Malaysia', flag: '🇲🇾' },
+    { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
+    { code: '+27', country: 'South Africa', flag: '🇿🇦' },
+    { code: '+55', country: 'Brazil', flag: '🇧🇷' },
+    { code: '+7', country: 'Russia', flag: '🇷🇺' },
+]
+
+/* ─── Password Eye Icon SVGs ─── */
+const EyeIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+        <circle cx="12" cy="12" r="3" />
+    </svg>
+)
+
+const EyeOffIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+        <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+)
+
 /* ─────────────────────────────────────────────
    LOGIN FORM
    ───────────────────────────────────────────── */
@@ -20,6 +54,7 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle }, ref) {
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
 
@@ -122,6 +157,9 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle }, ref) {
                 case 'donor':
                     navigate('/donor-dashboard')
                     break
+                case 'volunteer':
+                    navigate('/ngo-dashboard')
+                    break
                 default:
                     navigate('/')
             }
@@ -163,14 +201,25 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle }, ref) {
 
                     <div className="auth-input-group">
                         <label htmlFor="login-password">Password</label>
-                        <input
-                            type="password"
-                            id="login-password"
-                            placeholder="••••••••"
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
+                        <div className="auth-password-wrapper">
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                id="login-password"
+                                placeholder="••••••••"
+                                autoComplete="current-password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                            <button
+                                type="button"
+                                className="auth-password-toggle"
+                                onClick={() => setShowPassword(!showPassword)}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                tabIndex={-1}
+                            >
+                                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                            </button>
+                        </div>
                         <span className="auth-input-line" />
                     </div>
                 </div>
@@ -220,7 +269,10 @@ export const RegisterForm = forwardRef(function RegisterForm(
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
-    const [phone, setPhone] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const [countryCode, setCountryCode] = useState('+91')
+    const [phoneNumber, setPhoneNumber] = useState('')
     const [organizationName, setOrganizationName] = useState('')
     const [role, setRole] = useState('donor')
 
@@ -242,6 +294,14 @@ export const RegisterForm = forwardRef(function RegisterForm(
     const [ngoLng, setNgoLng] = useState(null)
     const [serviceRadius, setServiceRadius] = useState(10)
 
+    /* Step 2 — Volunteer fields */
+    const [volunteerAddress, setVolunteerAddress] = useState('')
+    const [volunteerCity, setVolunteerCity] = useState('')
+    const [volunteerLat, setVolunteerLat] = useState(null)
+    const [volunteerLng, setVolunteerLng] = useState(null)
+    const [availability, setAvailability] = useState('weekends')
+    const [hasVehicle, setHasVehicle] = useState(false)
+
     /* General UI state */
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
@@ -260,6 +320,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
     const step2Titles = {
         donor: 'Donor Profile',
         ngo: 'NGO Profile',
+        volunteer: 'Volunteer Profile',
         admin: 'Almost Done',
     }
 
@@ -269,14 +330,22 @@ export const RegisterForm = forwardRef(function RegisterForm(
         </span>
     ))
 
+    // Whether the non-India warning should show
+    const showCountryWarning = countryCode !== '+91'
+
     /* ── Step 1 Validation & Submit ── */
     const handleStep1Submit = async (e) => {
         e.preventDefault()
         setError('')
 
         // Validation
-        if (!fullName || !email || !password || !confirmPassword || !phone || !organizationName) {
+        const hasOrg = ['donor', 'ngo'].includes(role)
+        if (!fullName || !email || !password || !confirmPassword || !phoneNumber) {
             setError('Please fill in all fields.')
+            return
+        }
+        if (hasOrg && !organizationName) {
+            setError('Please fill in the organization name.')
             return
         }
 
@@ -290,6 +359,8 @@ export const RegisterForm = forwardRef(function RegisterForm(
             return
         }
 
+        const phone = `${countryCode} ${phoneNumber}`
+
         // For admin — no step 2 needed, register directly
         if (role === 'admin') {
             setLoading(true)
@@ -300,7 +371,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                     password,
                     phone,
                     role,
-                    organization_name: organizationName,
+                    organization_name: organizationName || null,
                 })
                 setRegisteredUserId(data.user?.id)
                 // Navigate to step 2 to show success
@@ -313,7 +384,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
             return
         }
 
-        // For donor/ngo — register user first, then go to step 2
+        // For donor/ngo/volunteer — register user first, then go to step 2
         setLoading(true)
         try {
             const data = await registerUser({
@@ -322,7 +393,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 password,
                 phone,
                 role,
-                organization_name: organizationName,
+                organization_name: organizationName || null,
             })
             setRegisteredUserId(data.user?.id)
             setStep(2)
@@ -420,21 +491,29 @@ export const RegisterForm = forwardRef(function RegisterForm(
         }
     }
 
+    /* ── Step 2 — Volunteer Submit (redirect to dashboard, profile saved in user table) ── */
+    const handleVolunteerComplete = () => {
+        // Volunteers don't need a separate profile table entry for now
+        // They are already registered with role=volunteer in profiles
+        navigate('/ngo-dashboard')
+    }
+
     /* ── Step 2 — Admin (already registered, just redirect) ── */
     const handleAdminComplete = () => {
         navigate('/admin-dashboard')
     }
 
     /* ── Render ── */
-    const totalSteps = role === 'admin' ? 1 : 2
-    const stepLabels = role === 'admin'
+    const noStep2 = role === 'admin'
+    const totalSteps = noStep2 ? 1 : 2
+    const stepLabels = noStep2
         ? ['Account']
-        : ['Account', role === 'donor' ? 'Donor Details' : 'NGO Details']
+        : ['Account', role === 'donor' ? 'Donor Details' : role === 'ngo' ? 'NGO Details' : 'Volunteer Details']
 
     return (
         <div className="auth-form-block auth-form-block--hidden" ref={ref}>
             {/* Step Indicator */}
-            {step === 1 && role !== 'admin' && (
+            {step === 1 && !noStep2 && (
                 <StepIndicator currentStep={step} totalSteps={totalSteps} labels={stepLabels} />
             )}
             {step === 2 && (
@@ -487,58 +566,100 @@ export const RegisterForm = forwardRef(function RegisterForm(
                             <div className="auth-fields-row">
                                 <div className="auth-input-group">
                                     <label htmlFor="register-password">Password</label>
-                                    <input
-                                        type="password"
-                                        id="register-password"
-                                        placeholder="••••••••"
-                                        autoComplete="new-password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                    />
+                                    <div className="auth-password-wrapper">
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            id="register-password"
+                                            placeholder="••••••••"
+                                            autoComplete="new-password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="auth-password-toggle"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                            tabIndex={-1}
+                                        >
+                                            {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                        </button>
+                                    </div>
                                     <span className="auth-input-line" />
                                 </div>
 
                                 <div className="auth-input-group">
                                     <label htmlFor="register-confirm-password">Confirm Password</label>
-                                    <input
-                                        type="password"
-                                        id="register-confirm-password"
-                                        placeholder="••••••••"
-                                        autoComplete="new-password"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                    />
+                                    <div className="auth-password-wrapper">
+                                        <input
+                                            type={showConfirmPassword ? 'text' : 'password'}
+                                            id="register-confirm-password"
+                                            placeholder="••••••••"
+                                            autoComplete="new-password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="auth-password-toggle"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                                            tabIndex={-1}
+                                        >
+                                            {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                        </button>
+                                    </div>
                                     <span className="auth-input-line" />
                                 </div>
                             </div>
 
                             <div className="auth-input-group">
                                 <label htmlFor="register-phone">Phone Number</label>
-                                <input
-                                    type="tel"
-                                    id="register-phone"
-                                    placeholder="+91 00000 00000"
-                                    autoComplete="tel"
-                                    value={phone}
-                                    onChange={(e) => setPhone(e.target.value)}
-                                />
+                                <div className="auth-phone-wrapper">
+                                    <select
+                                        className="auth-phone-code"
+                                        value={countryCode}
+                                        onChange={(e) => setCountryCode(e.target.value)}
+                                        id="register-country-code"
+                                    >
+                                        {COUNTRY_CODES.map((c) => (
+                                            <option key={c.code} value={c.code}>
+                                                {c.flag} {c.code}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <input
+                                        type="tel"
+                                        id="register-phone"
+                                        placeholder="00000 00000"
+                                        autoComplete="tel"
+                                        value={phoneNumber}
+                                        onChange={(e) => setPhoneNumber(e.target.value)}
+                                    />
+                                </div>
+                                {showCountryWarning && (
+                                    <p className="auth-country-warning">
+                                        ⚠ Currently this web application is only supported for India. In future, other countries will be added into the list.
+                                    </p>
+                                )}
                                 <span className="auth-input-line" />
                             </div>
 
-                            <div className="auth-input-group">
-                                <label htmlFor="register-org">Organization Name</label>
-                                <input
-                                    type="text"
-                                    id="register-org"
-                                    placeholder="Your organization"
-                                    autoComplete="organization"
-                                    value={organizationName}
-                                    onChange={(e) => setOrganizationName(e.target.value)}
-                                />
-                                <span className="auth-input-line" />
-                            </div>
-
-                            {/* Role Selector */}
+                            {/* Organization Name — only for donor & ngo */}
+                            {['donor', 'ngo'].includes(role) && (
+                                <div className="auth-input-group">
+                                    <label htmlFor="register-org">Organization Name</label>
+                                    <input
+                                        type="text"
+                                        id="register-org"
+                                        placeholder="Your organization"
+                                        autoComplete="organization"
+                                        value={organizationName}
+                                        onChange={(e) => setOrganizationName(e.target.value)}
+                                    />
+                                    <span className="auth-input-line" />
+                                </div>
+                            )}
 
                         </div>
 
@@ -762,6 +883,29 @@ export const RegisterForm = forwardRef(function RegisterForm(
                             {loading ? <span className="auth-btn-spinner" /> : 'Complete Registration'}
                         </button>
                     </form>
+                </div>
+            )}
+
+            {/* ═══════════ STEP 2 — VOLUNTEER ═══════════ */}
+            {step === 2 && role === 'volunteer' && (
+                <div ref={step2Ref} className="auth-success-block">
+                    <div className="auth-success-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--tundora)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                        </svg>
+                    </div>
+                    <h1 className="auth-heading">{step2TitleChars}</h1>
+                    <p className="auth-subtitle">
+                        Your volunteer account has been created successfully. You can now join community drives and help with food distribution.
+                    </p>
+                    <button
+                        className="auth-submit-btn"
+                        type="button"
+                        onClick={handleVolunteerComplete}
+                    >
+                        Go to Dashboard
+                    </button>
                 </div>
             )}
 

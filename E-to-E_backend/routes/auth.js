@@ -19,18 +19,26 @@ router.post('/register', async (req, res) => {
     } = req.body;
 
     // Validation
-    if (!full_name || !email || !password || !phone || !role || !organization_name) {
+    if (!full_name || !email || !password || !phone || !role) {
       return res.status(400).json({
         error: 'Missing required fields',
-        required: ['full_name', 'email', 'password', 'phone', 'role', 'organization_name']
+        required: ['full_name', 'email', 'password', 'phone', 'role']
+      });
+    }
+
+    // organization_name is required for donor and ngo, optional for admin and volunteer
+    if (['donor', 'ngo'].includes(role) && !organization_name) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        message: 'organization_name is required for donor and ngo roles'
       });
     }
 
     // Validate role
-    if (!['donor', 'ngo', 'admin'].includes(role)) {
+    if (!['donor', 'ngo', 'admin', 'volunteer'].includes(role)) {
       return res.status(400).json({
         error: 'Invalid role',
-        message: 'Role must be one of: donor, ngo, admin'
+        message: 'Role must be one of: donor, ngo, admin, volunteer'
       });
     }
 
@@ -57,7 +65,7 @@ router.post('/register', async (req, res) => {
         email,
         phone,
         role,
-        organization_name
+        organization_name: organization_name || null
       })
       .select()
       .single();
@@ -65,7 +73,7 @@ router.post('/register', async (req, res) => {
     if (profileError) {
       // Cleanup: delete auth user if profile creation fails
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      
+
       return res.status(500).json({
         error: 'Profile creation failed',
         message: profileError.message

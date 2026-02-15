@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import './Footer.css'
@@ -60,7 +61,7 @@ const Footer = () => {
                             <li><a href="#" className="footer__link">Volunteer</a></li>
                             <li><a href="#" className="footer__link">Partner With Us</a></li>
                             <li><a href="#" className="footer__link">Donate</a></li>
-                            <li><a href="#" className="footer__link">Contact</a></li>
+                            <li><Link to="/contact" className="footer__link">Contact</Link></li>
                         </ul>
                     </div>
 

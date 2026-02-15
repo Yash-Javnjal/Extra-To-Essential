@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import './ImpactStories.css'
 
 /* ─────────────────────────────────────────────
@@ -413,12 +414,12 @@ const ImpactStories = () => {
                             "You're asking me why I do this," he says.
                             "But the real question is — why didn't I start sooner?"
                         </p>
-                        <a href="#story-volunteer" className="btn btn--primary">
+                        <Link to="/login" className="btn btn--primary">
                             Join The Mission
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                                 <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                        </a>
+                        </Link>
                     </div>
                 </div>
             </section>

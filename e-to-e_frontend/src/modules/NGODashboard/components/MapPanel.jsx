@@ -2,7 +2,6 @@ import { useEffect, useRef, useMemo, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { useNGO } from '../context/NGOContext'
-import { supabase } from "../../../lib/supabaseClient";
 import 'leaflet/dist/leaflet.css'
 
 /* ─── Custom Marker Icons ─── */
@@ -24,8 +23,7 @@ function createIcon(color, label) {
 }
 
 const NGO_ICON = createIcon('#443c3c', 'N')
-const DONOR_ICON = createIcon('#6c7483', 'D')
-const VOLUNTEER_ICON = createIcon('#7f7a7b', 'V')
+const DONOR_ICON = createIcon('#2ecc71', 'D') // Green for active donations
 
 /* ─── Auto-fit bounds ─── */
 function FitBounds({ positions }) {
@@ -40,19 +38,48 @@ function FitBounds({ positions }) {
 }
 
 export default function MapPanel() {
-    const { ngoProfile, claims, deliveries, listings } = useNGO()
+    const { ngoProfile, claims, listings, claimListing } = useNGO()
     const mapRef = useRef(null)
+    const [actionLoading, setActionLoading] = useState(null)
+
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
     /* NGO center */
     const ngoLat = parseFloat(ngoProfile?.latitude) || 17.6599
     const ngoLng = parseFloat(ngoProfile?.longitude) || 75.9064
 
-    /* Donor markers from claims + listings */
-    const donorMarkers = useMemo(() => {
+    /* Active Donation Markers (Open listings) */
+    const activeMarkers = useMemo(() => {
         const markers = []
         const seen = new Set()
 
-        // From active claims
+        listings.forEach((l) => {
+            const lat = parseFloat(l.latitude)
+            const lng = parseFloat(l.longitude)
+            if (!lat || !lng) return
+            const key = `${lat}-${lng}`
+            if (seen.has(key)) return
+            seen.add(key)
+            markers.push({
+                id: l.listing_id,
+                lat,
+                lng,
+                name: l.donor_name || 'Donor',
+                food: l.food_type || '',
+                qty: l.quantity_kg || '',
+                address: l.pickup_address || '',
+                type: 'listing',
+            })
+        })
+
+        return markers
+    }, [listings])
+
+    /* Accepted Donation Markers (Claims) */
+    const acceptedMarkers = useMemo(() => {
+        const markers = []
+        const seen = new Set()
+
         claims.forEach((claim) => {
             const fl = claim.food_listings
             if (!fl || !fl.latitude || !fl.longitude) return
@@ -71,108 +98,48 @@ export default function MapPanel() {
             })
         })
 
-        // From available listings
-        listings.forEach((l) => {
-            const lat = parseFloat(l.latitude)
-            const lng = parseFloat(l.longitude)
-            if (!lat || !lng) return
-            const key = `${lat}-${lng}`
-            if (seen.has(key)) return
-            seen.add(key)
-            markers.push({
-                id: l.listing_id,
-                lat,
-                lng,
-                name: l.donors?.organization_name || l.donors?.city || l.organization_name || 'Donor',
-                food: l.food_type || '',
-                qty: l.quantity_kg || '',
-                address: l.pickup_address || '',
-                type: 'listing',
-            })
-        })
-
         return markers
-    }, [claims, listings])
+    }, [claims])
 
-    /* Real-time Volunteer Tracking */
-    const [liveVolunteers, setLiveVolunteers] = useState({})
-
-    useEffect(() => {
-        const channel = supabase.channel('tracking')
-            .on('broadcast', { event: 'location_update' }, (payload) => {
-                setLiveVolunteers(prev => ({
-                    ...prev,
-                    [payload.payload.volunteer_id]: payload.payload
-                }))
-            })
-            .subscribe()
-
-        return () => {
-            supabase.removeChannel(channel)
+    const handleAccept = async (id) => {
+        setActionLoading(id)
+        try {
+            await claimListing(id)
+        } catch (err) {
+            console.error('Accept error:', err)
+        } finally {
+            setActionLoading(null)
         }
-    }, [])
+    }
 
-    /* Volunteer markers: Merge DB deliveries with Live locations */
-    const volunteerMarkers = useMemo(() => {
-        const markers = []
-        const processedVolunteers = new Set()
-
-        // 1. Live Volunteers (High Priority)
-        Object.values(liveVolunteers).forEach(v => {
-            if (!v.latitude || !v.longitude) return
-            processedVolunteers.add(v.volunteer_id)
-            markers.push({
-                id: `live-${v.volunteer_id}`,
-                lat: v.latitude,
-                lng: v.longitude,
-                name: 'Volunteer (Live)', // We ideally need the name from context or DB, but ID or generic is fine for now
-                vehicle: 'Unknown',
-                status: v.status,
-                isLive: true
+    const handleReject = async (id) => {
+        setActionLoading(id)
+        try {
+            const token = localStorage.getItem('access_token')
+            const res = await fetch(`${API_URL}/listings/${id}/reject`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             })
-        })
+            if (!res.ok) throw new Error('Failed to reject')
 
-        // 2. Deliveries (Fallback for offline/static)
-        deliveries.forEach((d) => {
-            if (!d.volunteers || !d.ngo_claims?.food_listings) return
-            if (processedVolunteers.has(d.volunteer_id)) return // Skip if we have live data
-
-            const fl = d.ngo_claims.food_listings
-            // Place volunteer marker near pickup (offset slightly)
-            if (!fl.latitude || !fl.longitude) return
-            markers.push({
-                id: d.delivery_id,
-                lat: parseFloat(fl.latitude) + 0.001,
-                lng: parseFloat(fl.longitude) + 0.001,
-                name: d.volunteers.full_name,
-                vehicle: d.volunteers.vehicle_type || '',
-                status: d.delivery_status,
-                isLive: false
-            })
-        })
-        return markers
-    }, [deliveries, liveVolunteers])
-
-    /* Route lines: NGO → Donor for active claims */
-    const routeLines = useMemo(() => {
-        return donorMarkers
-            .filter((m) => m.type === 'claim')
-            .map((m) => ({
-                id: m.id,
-                positions: [
-                    [ngoLat, ngoLng],
-                    [m.lat, m.lng],
-                ],
-            }))
-    }, [donorMarkers, ngoLat, ngoLng])
+            // Re-fetch listings to update UI
+            window.location.reload() // Simple way for now, or update state if possible
+        } catch (err) {
+            console.error('Reject error:', err)
+        } finally {
+            setActionLoading(null)
+        }
+    }
 
     /* All positions for bounds fitting */
     const allPositions = useMemo(() => {
         const pts = [[ngoLat, ngoLng]]
-        donorMarkers.forEach((m) => pts.push([m.lat, m.lng]))
-        volunteerMarkers.forEach((m) => pts.push([m.lat, m.lng]))
+        activeMarkers.forEach((m) => pts.push([m.lat, m.lng]))
+        acceptedMarkers.forEach((m) => pts.push([m.lat, m.lng]))
         return pts
-    }, [ngoLat, ngoLng, donorMarkers, volunteerMarkers])
+    }, [ngoLat, ngoLng, activeMarkers, acceptedMarkers])
 
     return (
         <div className="ngo-map-container ngo-scroll-map">
@@ -199,11 +166,41 @@ export default function MapPanel() {
                     </Popup>
                 </Marker>
 
-                {/* Donor markers */}
-                {donorMarkers.map((m) => (
+                {/* Active Donation markers */}
+                {activeMarkers.map((m) => (
                     <Marker key={m.id} position={[m.lat, m.lng]} icon={DONOR_ICON}>
                         <Popup>
-                            <strong>{m.name}</strong>
+                            <div className="ngo-map-popup">
+                                <strong>{m.name}</strong>
+                                <p>{m.food} — {m.qty} kg</p>
+                                <small>{m.address}</small>
+                                <div className="ngo-map-actions">
+                                    <button
+                                        className="ngo-btn ngo-btn--primary ngo-btn--sm"
+                                        onClick={() => handleAccept(m.id)}
+                                        disabled={actionLoading === m.id}
+                                    >
+                                        {actionLoading === m.id ? 'Accepting...' : 'Accept'}
+                                    </button>
+                                    <button
+                                        className="ngo-btn ngo-btn--outline ngo-btn--sm"
+                                        onClick={() => handleReject(m.id)}
+                                        disabled={actionLoading === m.id}
+                                        style={{ marginLeft: '8px' }}
+                                    >
+                                        Reject
+                                    </button>
+                                </div>
+                            </div>
+                        </Popup>
+                    </Marker>
+                ))}
+
+                {/* Accepted Donation markers */}
+                {acceptedMarkers.map((m) => (
+                    <Marker key={m.id} position={[m.lat, m.lng]} icon={createIcon('#3498db', 'D')}>
+                        <Popup>
+                            <strong>{m.name} (Accepted)</strong>
                             <br />
                             {m.food} — {m.qty} kg
                             <br />
@@ -212,26 +209,13 @@ export default function MapPanel() {
                     </Marker>
                 ))}
 
-                {/* Volunteer markers */}
-                {volunteerMarkers.map((m) => (
-                    <Marker key={m.id} position={[m.lat, m.lng]} icon={VOLUNTEER_ICON}>
-                        <Popup>
-                            <strong>{m.name}</strong>
-                            <br />
-                            {m.vehicle && `Vehicle: ${m.vehicle}`}
-                            <br />
-                            Status: {m.status?.replace('_', ' ')}
-                        </Popup>
-                    </Marker>
-                ))}
-
-                {/* Route lines */}
-                {routeLines.map((r) => (
+                {/* Route lines for accepted claims */}
+                {acceptedMarkers.map((m) => (
                     <Polyline
-                        key={r.id}
-                        positions={r.positions}
+                        key={m.id}
+                        positions={[[ngoLat, ngoLng], [m.lat, m.lng]]}
                         pathOptions={{
-                            color: '#443c3c',
+                            color: '#3498db',
                             weight: 2,
                             opacity: 0.6,
                             dashArray: '8, 8',
@@ -247,12 +231,12 @@ export default function MapPanel() {
                     <span>NGO</span>
                 </div>
                 <div className="ngo-map-legend__item">
-                    <span className="ngo-map-legend__dot" style={{ background: '#6c7483' }} />
-                    <span>Donors</span>
+                    <span className="ngo-map-legend__dot" style={{ background: '#2ecc71' }} />
+                    <span>New Donations</span>
                 </div>
                 <div className="ngo-map-legend__item">
-                    <span className="ngo-map-legend__dot" style={{ background: '#7f7a7b' }} />
-                    <span>Volunteers</span>
+                    <span className="ngo-map-legend__dot" style={{ background: '#3498db' }} />
+                    <span>Accepted Missions</span>
                 </div>
             </div>
         </div>

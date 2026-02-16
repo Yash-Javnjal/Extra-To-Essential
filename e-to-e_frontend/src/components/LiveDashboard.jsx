@@ -12,6 +12,7 @@ const FALLBACK = {
     total_donors: 0,
     total_food_kg: 0,
     total_co2_tonnes: 0,
+    total_generosity_inr: 0,
 }
 
 const CARD_META = [
@@ -61,6 +62,19 @@ const CARD_META = [
             </svg>
         ),
     },
+    {
+        id: 'generosity',
+        fallbackKey: 'total_generosity_inr',
+        suffix: ' ₹',
+        label: 'Generosity (INR)',
+        icon: (
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v8" />
+                <path d="M8 12h8" />
+            </svg>
+        ),
+    },
 ]
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
@@ -92,6 +106,8 @@ const LiveDashboard = () => {
                     total_food_kg: foodKg,
                     // For 10 kg food: roughly 25kg CO2 saved
                     total_co2_tonnes: parseFloat(((foodKg * 2.5) / 1000).toFixed(2)),
+                    // Generosity calculation: approx 150 INR per kg food as impact value
+                    total_generosity_inr: Math.round(foodKg * 150),
                 })
             } catch (err) {
                 console.warn('Failed to fetch live stats', err)

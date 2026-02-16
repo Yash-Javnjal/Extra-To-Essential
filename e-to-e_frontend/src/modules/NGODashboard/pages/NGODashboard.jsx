@@ -8,6 +8,8 @@ import VolunteerManager from '../components/VolunteerManager'
 import MapPanel from '../components/MapPanel'
 import ActivityLog from '../components/ActivityLog'
 import NotificationToast from '../components/NotificationToast'
+import { useSocket } from '../../../context/SocketContext'
+import { Bell, X } from 'lucide-react'
 import { runPageLoadSequence, animateViewEnter, killAllAnimations } from '../animations/ngoAnimations'
 import './NGODashboard.css'
 
@@ -22,17 +24,20 @@ const VIEW_TITLES = {
 
 const VIEW_SUBTITLES = {
     overview: 'Real-time logistics command center',
-    incoming: 'Available food donations within your service radius',
+    incoming: 'Available food donations across all regions',
     pickups: 'Manage claimed donations and assign volunteers',
     volunteers: 'Add, edit, and manage your volunteer team',
-    map: 'Live map showing donors, volunteers, and routes',
+    map: 'Live map showing active donations and mission progress',
     log: 'Session activity history',
 }
 
 function DashboardInner() {
-    const { loading, errors, ngoProfile } = useNGO()
+    const { loading, errors, ngoProfile, fetchListings } = useNGO()
+    const socket = useSocket()
     const [activeView, setActiveView] = useState('overview')
     const [collapsed, setCollapsed] = useState(false)
+    const [showNotifications, setShowNotifications] = useState(false)
+    const [alerts, setAlerts] = useState([])
     const contentRef = useRef(null)
     const hasAnimated = useRef(false)
 
@@ -43,6 +48,26 @@ function DashboardInner() {
             setTimeout(() => runPageLoadSequence(), 100)
         }
     }, [loading.initial])
+
+    /* Socket Listeners */
+    useEffect(() => {
+        if (!socket) return
+
+        const handleNewDonation = (data) => {
+            setAlerts(prev => [{
+                id: Date.now(),
+                ...data,
+                read: false,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }, ...prev])
+
+            // Auto-refresh listings in context
+            if (fetchListings) fetchListings()
+        }
+
+        socket.on('new_donation', handleNewDonation)
+        return () => socket.off('new_donation', handleNewDonation)
+    }, [socket, fetchListings])
 
     /* View transition animation */
     useEffect(() => {
@@ -63,6 +88,12 @@ function DashboardInner() {
         window.addEventListener('resize', handleResize)
         return () => window.removeEventListener('resize', handleResize)
     }, [])
+
+    const unreadCount = alerts.filter(a => !a.read).length
+
+    const markAsRead = () => {
+        setAlerts(prev => prev.map(a => ({ ...a, read: true })))
+    }
 
     /* Initial loading state */
     if (loading.initial) {
@@ -140,6 +171,44 @@ function DashboardInner() {
                         <p className="ngo-view-subtitle">{VIEW_SUBTITLES[activeView]}</p>
                     </div>
                     <div className="ngo-view-header__meta">
+                        {/* Notification Bell */}
+                        <div className="ngo-notification-wrapper">
+                            <button
+                                className={`ngo-notification-btn ${unreadCount > 0 ? 'ngo-notification-btn--active' : ''}`}
+                                onClick={() => {
+                                    setShowNotifications(!showNotifications)
+                                    if (!showNotifications) markAsRead()
+                                }}
+                            >
+                                <Bell size={20} />
+                                {unreadCount > 0 && <span className="ngo-notification-count">{unreadCount}</span>}
+                            </button>
+
+                            {showNotifications && (
+                                <div className="ngo-notification-dropdown">
+                                    <div className="ngo-notification-dropdown__header">
+                                        <h4>Notifications</h4>
+                                        <button onClick={() => setShowNotifications(false)}><X size={16} /></button>
+                                    </div>
+                                    <div className="ngo-notification-dropdown__body">
+                                        {alerts.length === 0 ? (
+                                            <p className="ngo-notification-empty">No new notifications</p>
+                                        ) : (
+                                            alerts.map(alert => (
+                                                <div key={alert.id} className="ngo-notification-item">
+                                                    <div className="ngo-notification-item__icon">🍱</div>
+                                                    <div className="ngo-notification-item__content">
+                                                        <p>User <strong>{alert.donor_name}</strong> has made a donation of {alert.quantity_kg}kg {alert.food_type}</p>
+                                                        <span>{alert.time}</span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
                         <span className="ngo-live-dot" />
                         <span className="ngo-live-label">Live</span>
                     </div>

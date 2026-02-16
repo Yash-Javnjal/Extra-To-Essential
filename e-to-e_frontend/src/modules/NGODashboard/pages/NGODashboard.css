@@ -1340,3 +1340,160 @@
     background: rgba(255, 152, 0, 0.12);
     color: #e65100;
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   NOTIFICATION BELL & DROPDOWN
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.ngo-notification-wrapper {
+    position: relative;
+    margin-right: 12px;
+}
+
+.ngo-notification-btn {
+    position: relative;
+    background: transparent;
+    border: none;
+    color: var(--boulder);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.ngo-notification-btn:hover {
+    background: rgba(68, 60, 60, 0.05);
+    color: var(--tundora);
+}
+
+.ngo-notification-btn--active {
+    color: var(--tundora);
+}
+
+.ngo-notification-count {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #e74c3c;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--white);
+}
+
+.ngo-notification-dropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: 320px;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(212, 204, 202, 0.4);
+    z-index: 1000;
+    overflow: hidden;
+    animation: ngoFadeOpen 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes ngoFadeOpen {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ngo-notification-dropdown__header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(212, 204, 202, 0.3);
+}
+
+.ngo-notification-dropdown__header h4 {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.ngo-notification-dropdown__header button {
+    background: transparent;
+    border: none;
+    color: var(--boulder);
+    cursor: pointer;
+}
+
+.ngo-notification-dropdown__body {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.ngo-notification-empty {
+    padding: 30px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--boulder);
+}
+
+.ngo-notification-item {
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    border-bottom: 1px solid rgba(212, 204, 202, 0.2);
+    transition: background 0.2s ease;
+}
+
+.ngo-notification-item:hover {
+    background: rgba(212, 204, 202, 0.1);
+}
+
+.ngo-notification-item__icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.ngo-notification-item__content p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--tundora);
+}
+
+.ngo-notification-item__content span {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.72rem;
+    color: var(--boulder);
+}
+
+/* Map Action Buttons */
+.ngo-map-actions {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.ngo-map-popup p {
+    margin: 4px 0;
+    font-size: 0.85rem;
+}
+
+.ngo-map-popup small {
+    display: block;
+    color: var(--boulder);
+    margin-bottom: 8px;
+}

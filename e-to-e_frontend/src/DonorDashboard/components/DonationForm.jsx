@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import { playSuccessAnimation } from '../animations/dashboardAnimations'
-import { createListing, getAllNGOs } from '../../lib/donorApi'
+import { createListing } from '../../lib/donorApi'
+import { useSocket } from '../../context/SocketContext'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -41,11 +42,7 @@ function MapClickHandler({ onMapClick }) {
 }
 
 export default function DonationForm({ onSuccess }) {
-    const [step, setStep] = useState(1)
-    const [ngos, setNgos] = useState([])
-    const [loadingNgos, setLoadingNgos] = useState(true)
-    const [selectedNgo, setSelectedNgo] = useState(null)
-
+    const socket = useSocket()
     const [form, setForm] = useState({
         food_type: '',
         quantity_kg: '',
@@ -59,17 +56,31 @@ export default function DonationForm({ onSuccess }) {
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState(null)
     const [success, setSuccess] = useState(false)
+    const [notification, setNotification] = useState(null)
     const submitBtnRef = useRef(null)
 
-    /* ── Fetch NGOs on mount ── */
-    useState(() => {
-        getAllNGOs({ verified: true })
-            .then((res) => {
-                setNgos(res.ngos || [])
-            })
-            .catch(err => console.error('Failed to load NGOs', err))
-            .finally(() => setLoadingNgos(false))
-    }, [])
+    /* ── Socket Listeners for acceptance/rejection ── */
+    useEffect(() => {
+        if (!socket) return
+
+        const handleAccepted = (data) => {
+            setNotification({ type: 'success', message: data.message })
+            setTimeout(() => setNotification(null), 6000)
+        }
+
+        const handleRejected = (data) => {
+            setNotification({ type: 'error', message: data.message })
+            setTimeout(() => setNotification(null), 6000)
+        }
+
+        socket.on('donation_accepted', handleAccepted)
+        socket.on('donation_rejected', handleRejected)
+
+        return () => {
+            socket.off('donation_accepted', handleAccepted)
+            socket.off('donation_rejected', handleRejected)
+        }
+    }, [socket])
 
     const handleChange = (e) => {
         const { name, value } = e.target
@@ -138,8 +149,7 @@ export default function DonationForm({ onSuccess }) {
                 expiry_time: parsedExpiry.toISOString(),
                 pickup_address: form.pickup_address,
                 latitude: form.latitude,
-                longitude: form.longitude,
-                assigned_ngo_id: selectedNgo?.ngo_id
+                longitude: form.longitude
             })
 
             playSuccessAnimation(submitBtnRef.current)
@@ -156,14 +166,11 @@ export default function DonationForm({ onSuccess }) {
                 longitude: null,
             })
             setMarkerPos(null)
-            setStep(1) // Reset to step 1
-            setSelectedNgo(null)
 
             if (onSuccess) onSuccess()
 
             setTimeout(() => setSuccess(false), 4000)
         } catch (err) {
-            // Map technical error messages to user-friendly ones
             const rawMsg = err?.message || err?.error || ''
             let userMsg = 'Something went wrong while creating your donation. Please try again.'
 
@@ -187,50 +194,24 @@ export default function DonationForm({ onSuccess }) {
         }
     }
 
-    /* ── Render Step 1: Select NGO ── */
-    if (step === 1) {
-        return (
-            <div className="dd-step-container">
-                <h2 className="dd-step-title">Step 1: Select an NGO</h2>
-                <p className="dd-step-subtitle">Choose which NGO you would like to donate to.</p>
-
-                {loadingNgos ? (
-                    <div className="dd-ngo-loading">Loading NGOs...</div>
-                ) : ngos.length === 0 ? (
-                    <div className="dd-ngo-empty">No verified NGOs found.</div>
-                ) : (
-                    <div className="dd-ngo-grid">
-                        {ngos.map(ngo => (
-                            <div key={ngo.ngo_id} className="dd-ngo-card" onClick={() => {
-                                setSelectedNgo(ngo)
-                                setStep(2)
-                            }}>
-                                <div className="dd-ngo-avatar">
-                                    {ngo.ngo_name.charAt(0)}
-                                </div>
-                                <div className="dd-ngo-info">
-                                    <h3 className="dd-ngo-name">{ngo.ngo_name}</h3>
-                                    <p className="dd-ngo-meta">{ngo.city} • {ngo.service_radius_km}km</p>
-                                </div>
-                                <button className="dd-ngo-select-btn" type="button">Select</button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        )
-    }
-
-    /* ── Render Step 2: Form ── */
     return (
         <div className="dd-step-container">
             <div className="dd-step-header">
-                <button className="dd-step-back" onClick={() => setStep(1)} type="button">← Back to NGOs</button>
-                <h2 className="dd-step-title">Step 2: Donation Details</h2>
+                <h2 className="dd-step-title">Donation Details</h2>
             </div>
-            <div className="dd-selected-ngo-banner">
-                Donating to: <strong>{selectedNgo.ngo_name}</strong>
-            </div>
+
+            {/* Real-time WhatsApp-like Notification */}
+            {notification && (
+                <div className={`dd-live-notification ${notification.type}`}>
+                    <div className="dd-live-notification-icon">
+                        {notification.type === 'success' ? '🚀' : '⚠️'}
+                    </div>
+                    <div className="dd-live-notification-content">
+                        <strong>Update from NGO</strong>
+                        <p>{notification.message}</p>
+                    </div>
+                </div>
+            )}
 
             <form className="dd-donation-form" onSubmit={handleSubmit} id="donation-form">
                 <div className="dd-form-grid">
@@ -325,7 +306,6 @@ export default function DonationForm({ onSuccess }) {
                     </div>
 
                     {/* Map Picker */}
-                    {/* Divider before map */}
                     <div className="dd-form-divider" />
 
                     <div className="dd-form-group dd-form-group--full">
@@ -360,7 +340,7 @@ export default function DonationForm({ onSuccess }) {
                 {error && <div className="dd-form-error">{error}</div>}
                 {success && (
                     <div className="dd-form-success">
-                        ✓ Donation created successfully! Thank you for your generosity.
+                        ✓ Donation created successfully! All NGOs have been notified.
                     </div>
                 )}
 

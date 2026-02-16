@@ -23,6 +23,27 @@ export default function IncomingDonations() {
         [handleClaimListing]
     )
 
+    const handleReject = useCallback(
+        async (listing, e) => {
+            animateButtonPress(e.currentTarget)
+            try {
+                const token = localStorage.getItem('access_token')
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+                const res = await fetch(`${API_URL}/listings/${listing.listing_id}/reject`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                if (!res.ok) throw new Error('Failed to reject')
+                if (fetchListings) fetchListings()
+            } catch (err) {
+                console.error('Reject error:', err)
+            }
+        },
+        [fetchListings]
+    )
+
     /* Extract donor info — geo-matched listings may have flat fields or nested donors */
     function getDonorName(listing) {
         if (listing.organization_name) return listing.organization_name
@@ -143,6 +164,14 @@ export default function IncomingDonations() {
                                         disabled={loading.action}
                                     >
                                         {loading.action ? 'Accepting...' : 'Accept'}
+                                    </button>
+                                    <button
+                                        className="ngo-btn ngo-btn--outline"
+                                        onClick={(e) => handleReject(listing, e)}
+                                        disabled={loading.action}
+                                        style={{ marginLeft: '8px' }}
+                                    >
+                                        Reject
                                     </button>
                                 </div>
                             </td>

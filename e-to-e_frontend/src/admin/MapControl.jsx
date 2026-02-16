@@ -31,7 +31,7 @@ const createIcon = (color, label = '') => {
 
 const ngoIcon = createIcon('#443c3c', 'N')
 const donorIcon = createIcon('#6c7483', 'D')
-const listingIcon = createIcon('#6abf69')
+const listingIcon = createIcon('#2ecc71') // Brighter green dot for live donations
 
 /* ── Map auto-fit sub-component ── */
 function MapFitter({ markers }) {
@@ -123,9 +123,9 @@ export default function MapControl({ ngos, donors, listings }) {
         <section className="admin-section">
             <div className="admin-section__header">
                 <div>
-                    <h2 className="admin-section__title">Map Control Center</h2>
+                    <h2 className="admin-section__title">Live Donation Monitor</h2>
                     <p className="admin-section__subtitle">
-                        {allMarkers.length} locations mapped
+                        Mapped active food listings
                     </p>
                 </div>
             </div>

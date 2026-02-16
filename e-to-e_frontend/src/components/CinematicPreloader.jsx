@@ -25,54 +25,54 @@ export default function CinematicPreloader({ onComplete }) {
             gsap.set(textRef.current, { autoAlpha: 0, y: 20 })
 
             // 1. Logo Draw (Circle + simplified check/leaf)
-            tl.to(logoRef.current, { strokeDashoffset: 0, duration: 2, ease: "power2.inOut" })
-                .to(checkRef.current, { strokeDashoffset: 0, duration: 0.8, ease: "power2.out" }, "-=0.5")
+            tl.to(logoRef.current, { strokeDashoffset: 0, duration: 1, ease: "power2.inOut" })
+                .to(checkRef.current, { strokeDashoffset: 0, duration: 0.4, ease: "power2.out" }, "-=0.3")
 
             // 2. Text Reveal
             tl.to(textRef.current, {
                 autoAlpha: 1,
                 y: 0,
-                duration: 1.2,
+                duration: 0.6,
                 ease: "power3.out"
             }, "-=0.2")
 
             // 3. The Line Expands (The Portal)
             tl.to(lineRef.current, {
                 scaleX: 1,
-                duration: 1.2,
+                duration: 0.6,
                 ease: "expo.inOut",
-                delay: 0.3
+                delay: 0.1
             })
 
             // 4. Shutter open (The Reveal)
             tl.to(shutterTopRef.current, {
                 yPercent: -100,
-                duration: 1.5,
+                duration: 0.8,
                 ease: "power4.inOut"
             }, "open")
                 .to(shutterBottomRef.current, {
                     yPercent: 100,
-                    duration: 1.5,
+                    duration: 0.8,
                     ease: "power4.inOut"
                 }, "open")
                 .to([logoRef.current, textRef.current], {
                     autoAlpha: 0,
                     scale: 1.1,
-                    duration: 0.8,
+                    duration: 0.4,
                     ease: "power2.in"
-                }, "open-=1.2")
+                }, "open-=0.6")
 
             // 5. Hide line
             tl.to(lineRef.current, {
                 opacity: 0,
-                duration: 0.5
-            }, "open+=0.5")
+                duration: 0.3
+            }, "open+=0.2")
 
             // 6. Remove container from flow (handled by onComplete, but fade it just in case)
             tl.to(containerRef.current, {
                 autoAlpha: 0,
                 duration: 0.1,
-                delay: 0.1 // wait for shuters
+                delay: 0.05 // wait for shuters
             })
 
         }, containerRef)

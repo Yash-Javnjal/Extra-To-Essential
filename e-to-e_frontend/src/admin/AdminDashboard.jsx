@@ -8,11 +8,10 @@ import OverviewPanel from './OverviewPanel'
 import ActivityMonitor from './ActivityMonitor'
 import NgoManagement from './NgoManagement'
 import DonorManagement from './DonorManagement'
-import VolunteerNetwork from './VolunteerNetwork'
 import DonationMonitor from './DonationMonitor'
 import MapControl from './MapControl'
+import GenerosityPanel from './GenerosityPanel'
 import AlertCenter from './AlertCenter'
-import SystemLogs from './SystemLogs'
 import {
     getCurrentUser,
     getDashboardSummary,
@@ -348,6 +347,7 @@ export default function AdminDashboard() {
         totalDonors: donors.length,
         totalVolunteers: volunteers.length,
         totalDonations: listings.length,
+        totalGenerosity: listings.reduce((sum, l) => sum + (Math.round((l.quantity_kg || 0) * 150)), 0),
         activePickups: listings.filter(l =>
             ['claimed', 'scheduled', 'in_discussion'].includes(l.status)
         ).length,
@@ -427,19 +427,14 @@ export default function AdminDashboard() {
                             <DonorManagement donors={donors} onRefresh={() => fetchAllData(false)} />
                         </div>
 
-                        {/* 5 — Volunteer Network */}
-                        <div id="admin-volunteers">
-                            <VolunteerNetwork volunteers={volunteers} />
+                        {/* 5 — Generosity Impact */}
+                        <div id="admin-generosity">
+                            <GenerosityPanel stats={stats} />
                         </div>
 
-                        {/* 7 — Map Control Center */}
-                        <div id="admin-map">
-                            <MapControl ngos={ngos} donors={donors} listings={listings} />
-                        </div>
-
-                        {/* 9 — System Logs */}
-                        <div id="admin-logs">
-                            <SystemLogs ngos={ngos} donors={donors} listings={listings} />
+                        {/* 6 — Live Donation Map */}
+                        <div id="admin-live-map" className="admin-section">
+                            <MapControl ngos={ngos} donors={donors} listings={listings.filter(l => l.status === 'open')} />
                         </div>
                     </div>
                 </div>

@@ -18,9 +18,6 @@ const NAV_ITEMS = [
     { key: 'activity', Icon: Activity, label: 'Activity Feed' },
     { key: 'ngos', Icon: Building2, label: 'NGO Management' },
     { key: 'donors', Icon: Handshake, label: 'Donor Management' },
-    { key: 'volunteers', Icon: Users, label: 'Volunteers' },
-    { key: 'map', Icon: Map, label: 'Map Control' },
-    { key: 'logs', Icon: ClipboardList, label: 'System Logs' },
 ]
 
 const AdminSidebar = forwardRef(({ activeSection, onNavigate, user, stats, isOpen }, ref) => {

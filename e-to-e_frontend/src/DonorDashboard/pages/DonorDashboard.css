@@ -1865,4 +1865,65 @@
     .dd-profile-impact-grid {
         grid-template-columns: 1fr;
     }
+
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   LIVE NOTIFICATIONS (WhatsApp-like)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.dd-live-notification {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    width: 320px;
+    background: var(--white);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    z-index: 9999;
+    animation: ddSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    border-left: 4px solid var(--tundora);
+}
+
+.dd-live-notification.success {
+    border-left-color: #2ecc71;
+}
+
+.dd-live-notification.error {
+    border-left-color: #e74c3c;
+}
+
+.dd-live-notification-icon {
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.dd-live-notification-content strong {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.dd-live-notification-content p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin: 0;
+}
+
+@keyframes ddSlideIn {
+    from {
+        transform: translateX(100px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }

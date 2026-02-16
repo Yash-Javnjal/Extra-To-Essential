@@ -18,7 +18,7 @@ const STAT_CONFIG = [
     { key: 'totalVolunteers', label: 'Volunteers', Icon: Users },
     { key: 'totalDonations', label: 'Total Donations', Icon: Package },
     { key: 'activePickups', label: 'Active Pickups', Icon: Truck },
-    { key: 'completedDeliveries', label: 'Completed', Icon: CheckCircle2 },
+    { key: 'totalGenerosity', label: 'Generosity', Icon: Handshake, suffix: ' ₹' },
 ]
 
 const IMPACT_CONFIG = [
@@ -107,6 +107,7 @@ export default function OverviewPanel({ stats, totalImpact }) {
                         >
                             0
                         </div>
+                        {cfg.suffix && <span className="admin-stat-card__suffix">{cfg.suffix}</span>}
                         <div className="admin-stat-card__label">{cfg.label}</div>
                         <div className="admin-stat-card__glow" />
                     </div>

@@ -14,23 +14,23 @@ export function runPageLoadSequence() {
     tl.fromTo(
         '.dd-navbar',
         { y: -60, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1 }
+        { y: 0, opacity: 1, duration: 0.6 }
     )
 
     // 2 — Section label cinematic reveal
     tl.fromTo(
         '.dd-section-label',
         { x: -20, opacity: 0 },
-        { x: 0, opacity: 1, duration: 0.7, stagger: 0.06 },
-        '-=0.6'
+        { x: 0, opacity: 1, duration: 0.4, stagger: 0.04 },
+        '-=0.4'
     )
 
     // 3 — Section title reveal
     tl.fromTo(
         '.dd-section-title',
         { y: 30, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, stagger: 0.08 },
-        '-=0.5'
+        { y: 0, opacity: 1, duration: 0.5, stagger: 0.05 },
+        '-=0.3'
     )
 
     // 4 — Stat cards stagger float-in
@@ -41,19 +41,19 @@ export function runPageLoadSequence() {
             y: 0,
             opacity: 1,
             scale: 1,
-            duration: 0.9,
-            stagger: 0.12,
+            duration: 0.6,
+            stagger: 0.08,
             ease: 'back.out(1.4)',
         },
-        '-=0.4'
+        '-=0.2'
     )
 
     // 5 — Section dividers draw in
     tl.fromTo(
         '.dd-section-divider',
         { scaleX: 0, transformOrigin: 'left center' },
-        { scaleX: 1, duration: 0.6, stagger: 0.05 },
-        '-=0.3'
+        { scaleX: 1, duration: 0.4, stagger: 0.03 },
+        '-=0.2'
     )
 
     return tl
@@ -252,7 +252,7 @@ export function animateCounter(element, targetValue) {
     const obj = { val: 0 }
     gsap.to(obj, {
         val: targetValue,
-        duration: 2,
+        duration: 1.2,
         ease: 'power3.out',
         onUpdate: () => {
             if (element) {
@@ -275,7 +275,7 @@ export function animateMarkerDrop(markerElement) {
             y: 0,
             opacity: 1,
             scale: 1,
-            duration: 0.8,
+            duration: 0.5,
             ease: 'bounce.out',
         }
     )

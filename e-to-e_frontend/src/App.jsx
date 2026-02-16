@@ -24,10 +24,22 @@ gsap.registerPlugin(ScrollTrigger)
  */
 const DASHBOARD_PREFIXES = ['/donor-dashboard', '/ngo-dashboard', '/admin-dashboard']
 
+import { useAuth } from './context/AuthContext'
+import { SocketProvider } from './context/SocketContext'
+
 function App() {
   const lenisRef = useRef(null)
   const location = useLocation()
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => {
+    // Check if preloader has already been shown in this session
+    return !sessionStorage.getItem('preloader-session-shown')
+  })
+
+  const handlePreloaderComplete = () => {
+    setLoading(false)
+    sessionStorage.setItem('preloader-session-shown', 'true')
+  }
+  const { user } = useAuth()
 
   const isDashboard = DASHBOARD_PREFIXES.some((p) =>
     location.pathname.startsWith(p)
@@ -74,7 +86,7 @@ function App() {
   return (
     <>
       {loading && (
-        <CinematicPreloader onComplete={() => setLoading(false)} />
+        <CinematicPreloader onComplete={handlePreloaderComplete} />
       )}
       {/* While loading, we can keep the app content hidden or let it mount in background.
           For a portal reveal, content needs to be rendered but maybe covered. 
@@ -82,42 +94,44 @@ function App() {
           When loading is false, preloader unmounts. */}
 
       <div style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
-        <Routes>
-          {/* ── Public routes ── */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<AuthPage />} />
-          <Route path="/stories" element={<StoriesPage />} />
-          <Route path="/contact" element={<ContactPage />} />
+        <SocketProvider userId={user?.id}>
+          <Routes>
+            {/* ── Public routes ── */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/stories" element={<StoriesPage />} />
+            <Route path="/contact" element={<ContactPage />} />
 
-          {/* ── Protected dashboard routes ── */}
-          <Route
-            path="/donor-dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['donor']}>
-                <DonorDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/ngo-dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['ngo', 'volunteer']}>
-                <NGODashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin-dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
+            {/* ── Protected dashboard routes ── */}
+            <Route
+              path="/donor-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['donor']}>
+                  <DonorDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ngo-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['ngo', 'volunteer']}>
+                  <NGODashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* ── 404 catch-all ── */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+            {/* ── 404 catch-all ── */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </SocketProvider>
       </div>
     </>
   )

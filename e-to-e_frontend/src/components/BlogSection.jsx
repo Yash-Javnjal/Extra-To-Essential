@@ -29,7 +29,7 @@ const blogs = [
         image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=600&h=400&fit=crop',
         tag: 'Volunteer Story',
         title: 'The Student Who Bridges the Last Mile',
-        excerpt: 'Priya spends her weekends picking up food donations and delivering them to shelters. Her story shows how one person can make a profound impact.',
+        excerpt: 'Anil spends his weekends picking up food donations and delivering them to shelters. His story shows how one person can make a profound impact.',
     },
 ]
 
@@ -72,7 +72,7 @@ const BlogSection = () => {
     }, [])
 
     return (
-        <section ref={sectionRef} className="blog section section--white" id="blog">
+        <section ref={sectionRef} className="blog section section--white" id="ngo-story">
             <div className="container">
                 <div className="text-center">
                     <span className="section__label blog__label">Stories</span>

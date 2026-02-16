@@ -76,7 +76,7 @@ function TermsModal({ onClose, onAccept }) {
 /* ─────────────────────────────────────────────
    LOGIN FORM
    ───────────────────────────────────────────── */
-export const LoginForm = forwardRef(function LoginForm({ onToggle }, ref) {
+export const LoginForm = forwardRef(function LoginForm({ onToggle, onOAuthRoleMissing, ...props }, ref) {
     const headingRef = useRef(null)
     const subtitleRef = useRef(null)
     const fieldsRef = useRef(null)
@@ -93,67 +93,21 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle }, ref) {
     const [error, setError] = useState('')
 
     useEffect(() => {
+        // --- GSAP Animations ---
         const ctx = gsap.context(() => {
             const tl = gsap.timeline({ delay: 0.5 })
-
-            // Heading character reveal
+            // Heading
             const chars = headingRef.current?.querySelectorAll('.char')
-            if (chars?.length) {
-                tl.fromTo(
-                    chars,
-                    { y: 40, opacity: 0, rotateX: -40 },
-                    {
-                        y: 0,
-                        opacity: 1,
-                        rotateX: 0,
-                        duration: 0.8,
-                        ease: 'power3.out',
-                        stagger: 0.035,
-                    },
-                    0
-                )
-            }
-
+            if (chars?.length) tl.fromTo(chars, { y: 40, opacity: 0, rotateX: -40 }, { y: 0, opacity: 1, rotateX: 0, duration: 0.8, ease: 'power3.out', stagger: 0.035 }, 0)
             // Subtitle
-            tl.fromTo(
-                subtitleRef.current,
-                { y: 20, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' },
-                0.35
-            )
-
-            // Fields stagger
+            tl.fromTo(subtitleRef.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, 0.35)
+            // Fields
             const inputs = fieldsRef.current?.children
-            if (inputs?.length) {
-                tl.fromTo(
-                    inputs,
-                    { y: 25, opacity: 0 },
-                    {
-                        y: 0,
-                        opacity: 1,
-                        duration: 0.6,
-                        ease: 'power3.out',
-                        stagger: 0.1,
-                    },
-                    0.5
-                )
-            }
-
+            if (inputs?.length) tl.fromTo(inputs, { y: 25, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out', stagger: 0.1 }, 0.5)
             // Button
-            tl.fromTo(
-                btnRef.current,
-                { y: 20, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' },
-                0.8
-            )
-
-            // Toggle link
-            tl.fromTo(
-                toggleRef.current,
-                { opacity: 0 },
-                { opacity: 1, duration: 0.5, ease: 'power2.out' },
-                0.95
-            )
+            tl.fromTo(btnRef.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }, 0.8)
+            // Toggle
+            tl.fromTo(toggleRef.current, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: 'power2.out' }, 0.95)
         })
 
         return () => ctx.revert()
@@ -585,6 +539,11 @@ export const RegisterForm = forwardRef(function RegisterForm(
         navigate(auth.getDashboardPath('admin'))
     }
 
+    // New Google Auth Handler for Register page
+    // (Note: Register also has Google button)
+    // We can reuse the one in Login or just put it here.
+    // If user signs up with Google, they might still need to select a role if it's their first time.
+
     /* ── Render ── */
     const noStep2 = role === 'admin'
     const totalSteps = noStep2 ? 1 : 2
@@ -785,104 +744,105 @@ export const RegisterForm = forwardRef(function RegisterForm(
                         </button>
                     </div>
                 </>
-            )
-            }
+            )}
 
             {/* ═══════════ STEP 2 — DONOR ═══════════ */}
-            {step === 2 && role === 'donor' && (
-                <div ref={step2Ref}>
-                    <button
-                        type="button"
-                        className="auth-back-btn"
-                        onClick={() => setStep(1)}
-                        disabled
-                        title="You've already registered. Complete your profile."
-                    >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="15 18 9 12 15 6" />
-                        </svg>
-                    </button>
-
-                    <h1 className="auth-heading">{step2TitleChars}</h1>
-                    <p className="auth-subtitle">
-                        Complete your donor profile to start donating surplus food.
-                    </p>
-
-                    {error && <div className="auth-error-msg">{error}</div>}
-
-                    <form onSubmit={handleDonorSubmit}>
-                        <div className="auth-fields">
-                            {/* Business Type Dropdown */}
-                            <div className="auth-input-group">
-                                <label htmlFor="donor-business-type">Business Type</label>
-                                <select
-                                    id="donor-business-type"
-                                    value={businessType}
-                                    onChange={(e) => setBusinessType(e.target.value)}
-                                    className="auth-select"
-                                >
-                                    <option value="">Select business type</option>
-                                    <option value="restaurant">Restaurant</option>
-                                    <option value="catering">Catering</option>
-                                    <option value="hotel">Hotel</option>
-                                    <option value="individual">Individual</option>
-                                    <option value="other">Other</option>
-                                </select>
-                                <span className="auth-input-line" />
-                            </div>
-
-                            {/* Location Picker */}
-                            <div className="auth-role-specific-section">
-                                <LocationPicker
-                                    address={donorAddress}
-                                    onAddressChange={setDonorAddress}
-                                    onCityChange={setDonorCity}
-                                    onCoordsChange={(lat, lng) => {
-                                        setDonorLat(lat)
-                                        setDonorLng(lng)
-                                    }}
-                                />
-                            </div>
-
-                            {/* Hidden coordinate display */}
-                            {donorLat && donorLng && (
-                                <div className="auth-coords-display">
-                                    <span className="auth-coords-badge">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" /></svg>
-                                        {donorLat.toFixed(6)}, {donorLng.toFixed(6)}
-                                    </span>
-                                    {donorCity && <span className="auth-coords-city">{donorCity}</span>}
-                                </div>
-                            )}
-
-                            {/* CSR Participant Checkbox */}
-                            <div className="auth-checkbox-group">
-                                <label className="auth-checkbox-label">
-                                    <input
-                                        type="checkbox"
-                                        checked={csrParticipant}
-                                        onChange={(e) => setCsrParticipant(e.target.checked)}
-                                        className="auth-checkbox"
-                                    />
-                                    <span className="auth-checkbox-custom" />
-                                    <span className="auth-checkbox-text">
-                                        CSR Participant
-                                        <small>Enable if this is part of your Corporate Social Responsibility initiative</small>
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
-
+            {
+                step === 2 && role === 'donor' && (
+                    <div ref={step2Ref}>
                         <button
-                            className={`auth-submit-btn ${loading ? 'auth-submit-btn--loading' : ''}`}
-                            type="submit"
-                            disabled={loading}
+                            type="button"
+                            className="auth-back-btn"
+                            onClick={() => setStep(1)}
+                            disabled
+                            title="You've already registered. Complete your profile."
                         >
-                            {loading ? <span className="auth-btn-spinner" /> : 'Complete Registration'}
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="15 18 9 12 15 6" />
+                            </svg>
                         </button>
-                    </form>
-                </div>
-            )}
+
+                        <h1 className="auth-heading">{step2TitleChars}</h1>
+                        <p className="auth-subtitle">
+                            Complete your donor profile to start donating surplus food.
+                        </p>
+
+                        {error && <div className="auth-error-msg">{error}</div>}
+
+                        <form onSubmit={handleDonorSubmit}>
+                            <div className="auth-fields">
+                                {/* Business Type Dropdown */}
+                                <div className="auth-input-group">
+                                    <label htmlFor="donor-business-type">Business Type</label>
+                                    <select
+                                        id="donor-business-type"
+                                        value={businessType}
+                                        onChange={(e) => setBusinessType(e.target.value)}
+                                        className="auth-select"
+                                    >
+                                        <option value="">Select business type</option>
+                                        <option value="restaurant">Restaurant</option>
+                                        <option value="catering">Catering</option>
+                                        <option value="hotel">Hotel</option>
+                                        <option value="individual">Individual</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <span className="auth-input-line" />
+                                </div>
+
+                                {/* Location Picker */}
+                                <div className="auth-role-specific-section">
+                                    <LocationPicker
+                                        address={donorAddress}
+                                        onAddressChange={setDonorAddress}
+                                        onCityChange={setDonorCity}
+                                        onCoordsChange={(lat, lng) => {
+                                            setDonorLat(lat)
+                                            setDonorLng(lng)
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Hidden coordinate display */}
+                                {donorLat && donorLng && (
+                                    <div className="auth-coords-display">
+                                        <span className="auth-coords-badge">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" /></svg>
+                                            {donorLat.toFixed(6)}, {donorLng.toFixed(6)}
+                                        </span>
+                                        {donorCity && <span className="auth-coords-city">{donorCity}</span>}
+                                    </div>
+                                )}
+
+                                {/* CSR Participant Checkbox */}
+                                <div className="auth-checkbox-group">
+                                    <label className="auth-checkbox-label">
+                                        <input
+                                            type="checkbox"
+                                            checked={csrParticipant}
+                                            onChange={(e) => setCsrParticipant(e.target.checked)}
+                                            className="auth-checkbox"
+                                        />
+                                        <span className="auth-checkbox-custom" />
+                                        <span className="auth-checkbox-text">
+                                            CSR Participant
+                                            <small>Enable if this is part of your Corporate Social Responsibility initiative</small>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button
+                                className={`auth-submit-btn ${loading ? 'auth-submit-btn--loading' : ''}`}
+                                type="submit"
+                                disabled={loading}
+                            >
+                                {loading ? <span className="auth-btn-spinner" /> : 'Complete Registration'}
+                            </button>
+                        </form>
+                    </div>
+                )
+            }
 
             {/* ═══════════ STEP 2 — NGO ═══════════ */}
             {

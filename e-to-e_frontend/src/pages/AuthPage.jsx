@@ -274,7 +274,10 @@ function AuthPage() {
                 <div className="auth-form-panel" ref={formPanelLoginRef}>
                     <div className="auth-form-inner">
                         <div className="auth-form-container">
-                            <LoginForm ref={loginFormRef} onToggle={showRegister} />
+                            <LoginForm
+                                ref={loginFormRef}
+                                onToggle={showRegister}
+                            />
                         </div>
                     </div>
                 </div>

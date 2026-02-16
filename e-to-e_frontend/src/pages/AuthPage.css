@@ -1639,3 +1639,70 @@
     font-family: inherit;
     font-size: inherit;
 }
+
+/* ── Role Selection Modal ── */
+.auth-role-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.auth-role-modal {
+    background: var(--bg-primary);
+    padding: var(--space-2xl);
+    border-radius: var(--radius-xl);
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.3s ease-out;
+    border: 1px solid var(--swiss-coffee);
+}
+
+.auth-role-modal h2 {
+    font-family: var(--font-serif);
+    font-size: 1.8rem;
+    margin-bottom: var(--space-sm);
+    color: var(--text-primary);
+}
+
+.auth-role-modal p {
+    font-family: var(--font-sans);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xl);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.auth-role-modal .auth-role-selector {
+    margin-bottom: var(--space-xl);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

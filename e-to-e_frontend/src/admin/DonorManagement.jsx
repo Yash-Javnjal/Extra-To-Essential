@@ -151,7 +151,7 @@ export default function DonorManagement({ donors, onRefresh }) {
                         <tbody>
                             {filtered.map(d => (
                                 <tr key={d.donor_id}>
-                                    <td style={{ fontWeight: 600 }}>
+                                    <td>
                                         {d.profiles?.organization_name || '—'}
                                     </td>
                                     <td>{d.business_type || '—'}</td>

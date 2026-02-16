@@ -123,6 +123,35 @@ app.use((req, res) => {
   });
 });
 
+// Initialize HTTP server for Socket.IO
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CORS_ORIGIN || "*",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Socket.IO Connection Handler
+io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id);
+
+  socket.on('join_room', (room) => {
+    socket.join(room);
+    console.log(`User ${socket.id} joined room: ${room}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
+// Make io accessible to routes
+app.set('io', io);
+
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err);
@@ -135,7 +164,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log('='.repeat(60));
   console.log('Smart Surplus Food Redistribution System');
   console.log('='.repeat(60));

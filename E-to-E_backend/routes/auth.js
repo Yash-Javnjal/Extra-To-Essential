@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { supabase, supabaseAdmin } = require('../config/supabaseClient');
 const { authenticateUser } = require('../middleware/authMiddleware');
+const { sendWelcomeDonor, sendWelcomeNGO } = require('../services/emailService');
 
 /**
  * POST /api/auth/register
@@ -103,6 +104,25 @@ router.post('/register', async (req, res) => {
         error: 'Session creation failed',
         message: sessionError.message
       });
+    }
+
+    // ─── Send Welcome Email (non-blocking) ───
+    try {
+      const emailPayload = {
+        to: email,
+        userName: full_name,
+        email,
+        phone,
+        organizationName: organization_name || 'N/A',
+      };
+
+      if (role === 'donor') {
+        sendWelcomeDonor(emailPayload).catch(err => console.error('[AUTH] Welcome donor email failed:', err.message));
+      } else if (role === 'ngo') {
+        sendWelcomeNGO({ ...emailPayload, contactPerson: full_name }).catch(err => console.error('[AUTH] Welcome NGO email failed:', err.message));
+      }
+    } catch (emailErr) {
+      console.error('[AUTH] Error queueing welcome email:', emailErr.message);
     }
 
     res.status(201).json({

@@ -65,6 +65,55 @@ app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/impact', impactRoutes);
 app.use('/api/geocode', geocodeRoutes);
 
+// ─── Test Email Route ──────────────────────────────────────────
+const {
+  sendEmail,
+  sendWelcomeDonor,
+  sendWelcomeNGO,
+  sendListingCreatedEmail,
+  sendClaimAcceptedEmail,
+  sendDeliveryAssignedEmail,
+  sendDeliveryCompletedEmail,
+} = require('./services/emailService');
+
+app.get('/test-email', async (req, res) => {
+  const template = req.query.template || 'welcomeDonor';
+  const to = req.query.to || process.env.EMAIL_USER || 'test@example.com';
+
+  console.log(`[TEST-EMAIL] Sending "${template}" template to ${to}`);
+
+  const sampleData = {
+    welcomeDonor: () => sendWelcomeDonor({ to, userName: 'Test Donor', email: to, phone: '+91 98765 43210', organizationName: 'TestOrg Pvt Ltd' }),
+    welcomeNGO: () => sendWelcomeNGO({ to, userName: 'Test NGO Admin', email: to, phone: '+91 98765 43210', organizationName: 'Hope Foundation', contactPerson: 'Raj Sharma' }),
+    listingCreated: () => sendListingCreatedEmail({ to, ngoName: 'Hope Foundation', donorName: 'TestOrg Pvt Ltd', donorPhone: '+91 98765 43210', foodType: 'Cooked Rice & Curry', quantity: '25', mealEquivalent: '50', pickupAddress: '42 MG Road, Bengaluru, Karnataka', expiryTime: new Date(Date.now() + 6 * 3600000).toLocaleString(), distance: '3.2' }),
+    claimAccepted: () => sendClaimAcceptedEmail({ to, donorName: 'TestOrg Pvt Ltd', ngoName: 'Hope Foundation', ngoContact: 'Raj Sharma', ngoPhone: '+91 98765 43210', foodType: 'Cooked Rice & Curry', quantity: '25', pickupAddress: '42 MG Road, Bengaluru, Karnataka', pickupTime: new Date(Date.now() + 2 * 3600000).toLocaleString() }),
+    deliveryAssigned: () => sendDeliveryAssignedEmail({ to, volunteerName: 'Amit Kumar', ngoName: 'Hope Foundation', ngoPhone: '+91 98765 43210', donorName: 'TestOrg Pvt Ltd', donorPhone: '+91 98765 43211', foodType: 'Cooked Rice & Curry', quantity: '25', pickupAddress: '42 MG Road, Bengaluru, Karnataka', deliveryStatus: 'Assigned' }),
+    deliveryCompleted: () => sendDeliveryCompletedEmail({ to, recipientName: 'TestOrg Pvt Ltd', donorName: 'TestOrg Pvt Ltd', donorPhone: '+91 98765 43211', ngoName: 'Hope Foundation', ngoPhone: '+91 98765 43210', volunteerName: 'Amit Kumar', foodType: 'Cooked Rice & Curry', quantity: '25', mealEquivalent: '50', pickupAddress: '42 MG Road, Bengaluru, Karnataka', deliveryStatus: 'Delivered', completedAt: new Date().toLocaleString(), co2Saved: '62.50' }),
+  };
+
+  if (!sampleData[template]) {
+    return res.status(400).json({
+      error: 'Invalid template',
+      available: Object.keys(sampleData),
+      usage: 'GET /test-email?template=welcomeDonor&to=your@email.com',
+    });
+  }
+
+  try {
+    const result = await sampleData[template]();
+    console.log(`[TEST-EMAIL] Result:`, result);
+    res.json({
+      message: `Test email sent with template: ${template}`,
+      to,
+      template,
+      result,
+    });
+  } catch (error) {
+    console.error(`[TEST-EMAIL] ❌ Error:`, error);
+    res.status(500).json({ error: 'Email failed', message: error.message });
+  }
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
@@ -86,13 +135,14 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log('='.repeat(60));
   console.log('Smart Surplus Food Redistribution System');
   console.log('='.repeat(60));
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`API Base URL: http://localhost:${PORT}`);
+  console.log(`Network: http://172.19.239.240:${PORT}`);
   console.log('='.repeat(60));
   console.log('\nAvailable Endpoints:');
   console.log('  POST   /api/auth/register     - Register new user');

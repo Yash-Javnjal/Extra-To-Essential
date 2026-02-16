@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to Extra-To-Essential</title>
+  <style>
+    body { margin: 0; padding: 0; background: #0f172a; font-family: 'Segoe UI', Arial, sans-serif; }
+    .wrapper { max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 16px; overflow: hidden; }
+    .header { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); padding: 40px 32px; text-align: center; }
+    .header h1 { color: #fff; margin: 0; font-size: 26px; letter-spacing: -0.5px; }
+    .header p { color: #c7d2fe; margin: 8px 0 0; font-size: 14px; }
+    .body { padding: 32px; color: #e2e8f0; line-height: 1.7; }
+    .body h2 { color: #a5b4fc; margin: 0 0 16px; font-size: 22px; }
+    .body p { margin: 0 0 16px; font-size: 15px; }
+    .info-card { background: #334155; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #6366f1; }
+    .info-card strong { color: #a5b4fc; }
+    .cta-btn { display: inline-block; background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 8px 0; }
+    .steps { margin: 20px 0; }
+    .step { display: flex; align-items: flex-start; margin-bottom: 14px; }
+    .step-num { background: #6366f1; color: #fff; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; margin-right: 12px; flex-shrink: 0; }
+    .step-text { color: #cbd5e1; font-size: 14px; }
+    .footer { background: #0f172a; padding: 24px 32px; text-align: center; color: #64748b; font-size: 12px; }
+    .footer a { color: #a5b4fc; text-decoration: none; }
+    @media (max-width: 620px) {
+      .wrapper { border-radius: 0; }
+      .header { padding: 28px 20px; }
+      .body { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <h1>🏢 Extra-To-Essential</h1>
+      <p>Smart Surplus Food Redistribution System</p>
+    </div>
+    <div class="body">
+      <h2>Welcome, {{userName}}!</h2>
+      <p>Your NGO <strong>{{organizationName}}</strong> has been successfully registered. You're now part of a network working to eliminate food waste and feed communities.</p>
+
+      <div class="info-card">
+        <strong>Your Account Details</strong><br/>
+        📧 Email: {{email}}<br/>
+        📱 Phone: {{phone}}<br/>
+        🏢 Organization: {{organizationName}}<br/>
+        👤 Contact Person: {{contactPerson}}
+      </div>
+
+      <p style="font-weight:600; color:#a5b4fc;">Getting started as an NGO:</p>
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">1</span>
+          <span class="step-text">Complete your NGO profile with service area &amp; location</span>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <span class="step-text">Browse available food listings from donors near you</span>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <span class="step-text">Claim a donation and schedule pickup</span>
+        </div>
+        <div class="step">
+          <span class="step-num">4</span>
+          <span class="step-text">Add volunteers to your team for efficient deliveries</span>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:24px;">
+        <a href="{{dashboardUrl}}" class="cta-btn">Go to Dashboard →</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Extra-To-Essential &bull; Reducing food waste, one meal at a time.</p>
+      <p>If you didn't create this account, please <a href="mailto:{{supportEmail}}">contact support</a>.</p>
+    </div>
+  </div>
+</body>
+</html>

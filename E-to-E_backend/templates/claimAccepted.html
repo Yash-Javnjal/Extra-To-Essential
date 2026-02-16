@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Donation Has Been Claimed!</title>
+  <style>
+    body { margin: 0; padding: 0; background: #0f172a; font-family: 'Segoe UI', Arial, sans-serif; }
+    .wrapper { max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 16px; overflow: hidden; }
+    .header { background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%); padding: 40px 32px; text-align: center; }
+    .header h1 { color: #fff; margin: 0; font-size: 26px; letter-spacing: -0.5px; }
+    .header p { color: #d1fae5; margin: 8px 0 0; font-size: 14px; }
+    .body { padding: 32px; color: #e2e8f0; line-height: 1.7; }
+    .body h2 { color: #34d399; margin: 0 0 16px; font-size: 22px; }
+    .body p { margin: 0 0 16px; font-size: 15px; }
+    .claim-card { background: #334155; border-radius: 12px; padding: 24px; margin: 20px 0; border-left: 4px solid #10b981; }
+    .claim-card .label { color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .claim-card .value { color: #f1f5f9; font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+    .claim-card .value:last-child { margin-bottom: 0; }
+    .badge { display: inline-block; background: #10b981; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .ngo-card { background: #1e3a5f; border: 1px solid #334155; border-radius: 10px; padding: 16px; margin-top: 16px; }
+    .ngo-card strong { color: #34d399; }
+    .cta-btn { display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 8px 0; }
+    .footer { background: #0f172a; padding: 24px 32px; text-align: center; color: #64748b; font-size: 12px; }
+    .footer a { color: #34d399; text-decoration: none; }
+    @media (max-width: 620px) {
+      .wrapper { border-radius: 0; }
+      .header { padding: 28px 20px; }
+      .body { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <h1>🎉 Donation Claimed!</h1>
+      <p>An NGO has claimed your food listing</p>
+    </div>
+    <div class="body">
+      <h2>Great news, {{donorName}}!</h2>
+      <p>Your food donation has been claimed by <strong>{{ngoName}}</strong>. They will coordinate pickup with you shortly.</p>
+
+      <div class="claim-card">
+        <div class="label">Food Type</div>
+        <div class="value">{{foodType}} <span class="badge">CLAIMED</span></div>
+
+        <div class="label">Quantity</div>
+        <div class="value">{{quantity}} kg</div>
+
+        <div class="label">Pickup Address</div>
+        <div class="value">📍 {{pickupAddress}}</div>
+
+        <div class="label">Scheduled Pickup</div>
+        <div class="value">🕐 {{pickupTime}}</div>
+      </div>
+
+      <div class="ngo-card">
+        <strong>Claiming NGO</strong><br/>
+        🏢 {{ngoName}}<br/>
+        👤 Contact: {{ngoContact}}<br/>
+        📱 Phone: {{ngoPhone}}
+      </div>
+
+      <p style="margin-top:20px; color:#94a3b8; font-size:13px;">💡 <em>Please ensure the food is packaged and ready at the pickup address by the scheduled time.</em></p>
+
+      <div style="text-align:center; margin-top:24px;">
+        <a href="{{dashboardUrl}}" class="cta-btn">View Claim Details →</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Extra-To-Essential &bull; Reducing food waste, one meal at a time.</p>
+      <p>Thank you for your generosity! 💚</p>
+    </div>
+  </div>
+</body>
+</html>

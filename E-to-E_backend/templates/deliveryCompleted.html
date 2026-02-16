@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delivery Completed!</title>
+  <style>
+    body { margin: 0; padding: 0; background: #0f172a; font-family: 'Segoe UI', Arial, sans-serif; }
+    .wrapper { max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 16px; overflow: hidden; }
+    .header { background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #6366f1 100%); padding: 48px 32px; text-align: center; }
+    .header h1 { color: #fff; margin: 0; font-size: 28px; letter-spacing: -0.5px; }
+    .header p { color: #d1fae5; margin: 8px 0 0; font-size: 14px; }
+    .body { padding: 32px; color: #e2e8f0; line-height: 1.7; }
+    .body h2 { color: #34d399; margin: 0 0 16px; font-size: 22px; }
+    .body p { margin: 0 0 16px; font-size: 15px; }
+    .success-banner { background: linear-gradient(135deg, #065f46, #064e3b); border-radius: 12px; padding: 24px; margin: 20px 0; text-align: center; border: 1px solid #10b981; }
+    .success-banner .icon { font-size: 48px; margin-bottom: 12px; }
+    .success-banner .title { color: #34d399; font-size: 18px; font-weight: 700; }
+    .success-banner .subtitle { color: #a7f3d0; font-size: 14px; margin-top: 4px; }
+    .summary-card { background: #334155; border-radius: 12px; padding: 24px; margin: 20px 0; }
+    .summary-card .label { color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .summary-card .value { color: #f1f5f9; font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+    .summary-card .value:last-child { margin-bottom: 0; }
+    .impact-row { display: flex; justify-content: space-around; margin: 20px 0; gap: 12px; }
+    .impact-box { background: #334155; border-radius: 12px; padding: 20px; text-align: center; flex: 1; }
+    .impact-box .num { color: #34d399; font-size: 24px; font-weight: 700; }
+    .impact-box .lbl { color: #94a3b8; font-size: 12px; text-transform: uppercase; margin-top: 4px; }
+    .participants { margin: 20px 0; }
+    .participant { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+    .participant .avatar { width: 40px; height: 40px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .participant .info strong { color: #e2e8f0; font-size: 14px; }
+    .participant .info span { display: block; color: #94a3b8; font-size: 12px; }
+    .cta-btn { display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 8px 0; }
+    .footer { background: #0f172a; padding: 24px 32px; text-align: center; color: #64748b; font-size: 12px; }
+    .footer a { color: #34d399; text-decoration: none; }
+    @media (max-width: 620px) {
+      .wrapper { border-radius: 0; }
+      .header { padding: 32px 20px; }
+      .body { padding: 24px 20px; }
+      .impact-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <h1>✨ Delivery Completed!</h1>
+      <p>Another successful food redistribution</p>
+    </div>
+    <div class="body">
+      <div class="success-banner">
+        <div class="icon">🎉</div>
+        <div class="title">Mission Accomplished!</div>
+        <div class="subtitle">The food has been successfully delivered</div>
+      </div>
+
+      <h2>Hello, {{recipientName}}!</h2>
+      <p>The delivery for the food donation has been completed successfully. Here's a summary:</p>
+
+      <div class="summary-card">
+        <div class="label">Food Type</div>
+        <div class="value">{{foodType}}</div>
+
+        <div class="label">Quantity</div>
+        <div class="value">{{quantity}} kg (≈ {{mealEquivalent}} meals)</div>
+
+        <div class="label">Pickup Address</div>
+        <div class="value">📍 {{pickupAddress}}</div>
+
+        <div class="label">Delivery Status</div>
+        <div class="value" style="color: #34d399;">✅ {{deliveryStatus}}</div>
+
+        <div class="label">Completed At</div>
+        <div class="value">🕐 {{completedAt}}</div>
+      </div>
+
+      <div class="impact-row">
+        <div class="impact-box">
+          <div class="num">{{mealEquivalent}}</div>
+          <div class="lbl">Meals Served</div>
+        </div>
+        <div class="impact-box">
+          <div class="num">{{co2Saved}} kg</div>
+          <div class="lbl">CO₂ Saved</div>
+        </div>
+        <div class="impact-box">
+          <div class="num">{{quantity}} kg</div>
+          <div class="lbl">Food Saved</div>
+        </div>
+      </div>
+
+      <p style="font-weight:600; color:#a5b4fc;">Participants:</p>
+      <div class="participants">
+        <div class="participant">
+          <div class="avatar">🏢</div>
+          <div class="info">
+            <strong>{{donorName}}</strong>
+            <span>Donor &bull; {{donorPhone}}</span>
+          </div>
+        </div>
+        <div class="participant">
+          <div class="avatar">🏥</div>
+          <div class="info">
+            <strong>{{ngoName}}</strong>
+            <span>NGO &bull; {{ngoPhone}}</span>
+          </div>
+        </div>
+        <div class="participant">
+          <div class="avatar">🚚</div>
+          <div class="info">
+            <strong>{{volunteerName}}</strong>
+            <span>Volunteer</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:24px;">
+        <a href="{{dashboardUrl}}" class="cta-btn">View Full Impact →</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Extra-To-Essential &bull; Reducing food waste, one meal at a time.</p>
+      <p>Together we're making a difference! 🌍💚</p>
+    </div>
+  </div>
+</body>
+</html>

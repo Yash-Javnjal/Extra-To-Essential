@@ -5,6 +5,7 @@ const { authenticateUser } = require('../middleware/authMiddleware');
 const { ngoOnly } = require('../middleware/roleGuards');
 const { sendClaimAlert, sendDeliveryAlert } = require('../services/notificationService');
 const { findBestVolunteer } = require('../services/volunteerService');
+const { sendClaimAcceptedEmail, sendDeliveryAssignedEmail } = require('../services/emailService');
 
 /**
  * POST /api/claims
@@ -32,12 +33,12 @@ router.post('/', authenticateUser, ngoOnly, async (req, res) => {
     }
     console.log('[CLAIMS] NGO found:', ngo.ngo_id, ngo.ngo_name);
 
-    // Get listing info (for notification later)
+    // Get listing info (for notification + email later)
     const { data: listing } = await supabaseAdmin
       .from('food_listings')
       .select(`
-        listing_id, food_type, status, is_locked,
-        donors!inner ( profile_id, profiles ( phone, organization_name ) )
+        listing_id, food_type, quantity_kg, pickup_address, status, is_locked, donor_id,
+        donors!inner ( donor_id, profile_id, profiles ( phone, email, full_name, organization_name ) )
       `)
       .eq('listing_id', listing_id)
       .single();
@@ -62,13 +63,54 @@ router.post('/', authenticateUser, ngoOnly, async (req, res) => {
     if (!rpcError && rpcResult && !rpcResult.error) {
       console.log('[CLAIMS] RPC success! Claim:', rpcResult.claim_id);
 
-      // Send notification (non-blocking)
+      // Send push notification (non-blocking)
       try {
         const donorPhone = listing.donors?.profiles?.phone;
         if (donorPhone) {
           sendClaimAlert(donorPhone, ngo.ngo_name, listing.food_type).catch(() => { });
         }
       } catch (_) { }
+
+      // ─── Send claim accepted EMAIL to donor (non-blocking) ───
+      (async () => {
+        try {
+          let donorEmail = listing.donors?.profiles?.email;
+          let donorDisplayName = listing.donors?.profiles?.organization_name || listing.donors?.profiles?.full_name || 'Donor';
+
+          // Fallback lookup if email not available
+          if (!donorEmail) {
+            const { data: donorProfile } = await supabaseAdmin
+              .from('donors')
+              .select('profiles(email, full_name, organization_name)')
+              .eq('donor_id', listing.donor_id || listing.donors?.donor_id)
+              .single();
+            donorEmail = donorProfile?.profiles?.email;
+            donorDisplayName = donorProfile?.profiles?.organization_name || donorProfile?.profiles?.full_name || donorDisplayName;
+          }
+
+          if (donorEmail) {
+            const { data: ngoFull } = await supabaseAdmin
+              .from('ngos')
+              .select('ngo_name, contact_person, profiles(phone)')
+              .eq('ngo_id', ngo.ngo_id)
+              .single();
+
+            sendClaimAcceptedEmail({
+              to: donorEmail,
+              donorName: donorDisplayName,
+              ngoName: ngo.ngo_name,
+              ngoContact: ngoFull?.contact_person || ngo.ngo_name,
+              ngoPhone: ngoFull?.profiles?.phone || 'N/A',
+              foodType: listing.food_type,
+              quantity: String(listing.quantity_kg || ''),
+              pickupAddress: listing.pickup_address || 'N/A',
+              pickupTime: pickup_scheduled_time ? new Date(pickup_scheduled_time).toLocaleString() : 'To be scheduled',
+            }).catch(err => console.error('[CLAIMS] Claim email to donor failed:', err.message));
+          }
+        } catch (emailErr) {
+          console.error('[CLAIMS] Error sending claim email:', emailErr.message);
+        }
+      })();
 
       // ─── Auto-Assign Volunteer ───
       let assignedDelivery = null;
@@ -145,13 +187,47 @@ router.post('/', authenticateUser, ngoOnly, async (req, res) => {
     }
     console.log('[CLAIMS] Claim created:', claim.claim_id);
 
-    // Notification (non-blocking)
+    // Push notification (non-blocking)
     try {
       const donorPhone = listing.donors?.profiles?.phone;
       if (donorPhone) {
         sendClaimAlert(donorPhone, ngo.ngo_name, listing.food_type).catch(() => { });
       }
     } catch (_) { }
+
+    // ─── Send claim accepted EMAIL to donor (fallback path, non-blocking) ───
+    (async () => {
+      try {
+        const { data: donorProfile } = await supabaseAdmin
+          .from('food_listings')
+          .select('donor_id, food_type, quantity_kg, pickup_address, donors(profiles(email, full_name, organization_name))')
+          .eq('listing_id', listing_id)
+          .single();
+
+        const dEmail = donorProfile?.donors?.profiles?.email;
+        if (dEmail) {
+          const { data: ngoFull } = await supabaseAdmin
+            .from('ngos')
+            .select('ngo_name, contact_person, profiles(phone)')
+            .eq('ngo_id', ngo.ngo_id)
+            .single();
+
+          sendClaimAcceptedEmail({
+            to: dEmail,
+            donorName: donorProfile.donors.profiles.organization_name || donorProfile.donors.profiles.full_name || 'Donor',
+            ngoName: ngo.ngo_name,
+            ngoContact: ngoFull?.contact_person || ngo.ngo_name,
+            ngoPhone: ngoFull?.profiles?.phone || 'N/A',
+            foodType: donorProfile.food_type,
+            quantity: String(donorProfile.quantity_kg || ''),
+            pickupAddress: donorProfile.pickup_address || 'N/A',
+            pickupTime: pickup_scheduled_time ? new Date(pickup_scheduled_time).toLocaleString() : 'To be scheduled',
+          }).catch(err => console.error('[CLAIMS] Claim email to donor (fallback) failed:', err.message));
+        }
+      } catch (emailErr) {
+        console.error('[CLAIMS] Error sending claim email (fallback):', emailErr.message);
+      }
+    })();
 
     // ─── Auto-Assign Volunteer (Fallback Path) ───
     let assignedDelivery = null;

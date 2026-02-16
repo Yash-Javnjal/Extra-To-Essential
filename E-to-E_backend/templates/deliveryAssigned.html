@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delivery Assigned to You</title>
+  <style>
+    body { margin: 0; padding: 0; background: #0f172a; font-family: 'Segoe UI', Arial, sans-serif; }
+    .wrapper { max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 16px; overflow: hidden; }
+    .header { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 40px 32px; text-align: center; }
+    .header h1 { color: #fff; margin: 0; font-size: 26px; letter-spacing: -0.5px; }
+    .header p { color: #bfdbfe; margin: 8px 0 0; font-size: 14px; }
+    .body { padding: 32px; color: #e2e8f0; line-height: 1.7; }
+    .body h2 { color: #60a5fa; margin: 0 0 16px; font-size: 22px; }
+    .body p { margin: 0 0 16px; font-size: 15px; }
+    .delivery-card { background: #334155; border-radius: 12px; padding: 24px; margin: 20px 0; border-left: 4px solid #3b82f6; }
+    .delivery-card .label { color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .delivery-card .value { color: #f1f5f9; font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+    .delivery-card .value:last-child { margin-bottom: 0; }
+    .badge { display: inline-block; background: #3b82f6; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .contact-row { display: flex; justify-content: space-between; margin-top: 16px; gap: 12px; }
+    .contact-box { background: #1e3a5f; border: 1px solid #334155; border-radius: 10px; padding: 14px; flex: 1; }
+    .contact-box strong { color: #60a5fa; font-size: 13px; }
+    .contact-box span { display: block; color: #cbd5e1; font-size: 13px; margin-top: 4px; }
+    .cta-btn { display: inline-block; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 8px 0; }
+    .footer { background: #0f172a; padding: 24px 32px; text-align: center; color: #64748b; font-size: 12px; }
+    .footer a { color: #60a5fa; text-decoration: none; }
+    @media (max-width: 620px) {
+      .wrapper { border-radius: 0; }
+      .header { padding: 28px 20px; }
+      .body { padding: 24px 20px; }
+      .contact-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <h1>🚚 Delivery Assigned!</h1>
+      <p>You've been assigned a food delivery</p>
+    </div>
+    <div class="body">
+      <h2>Hello, {{volunteerName}}!</h2>
+      <p>You have been assigned a delivery by <strong>{{ngoName}}</strong>. Please review the details below and prepare for pickup.</p>
+
+      <div class="delivery-card">
+        <div class="label">Food Type</div>
+        <div class="value">{{foodType}} <span class="badge">ASSIGNED</span></div>
+
+        <div class="label">Quantity</div>
+        <div class="value">{{quantity}} kg</div>
+
+        <div class="label">Pickup Address</div>
+        <div class="value">📍 {{pickupAddress}}</div>
+
+        <div class="label">Delivery Status</div>
+        <div class="value">{{deliveryStatus}}</div>
+      </div>
+
+      <div class="contact-row">
+        <div class="contact-box">
+          <strong>🏢 Donor</strong>
+          <span>{{donorName}}</span>
+          <span>📱 {{donorPhone}}</span>
+        </div>
+        <div class="contact-box">
+          <strong>🏢 NGO</strong>
+          <span>{{ngoName}}</span>
+          <span>📱 {{ngoPhone}}</span>
+        </div>
+      </div>
+
+      <p style="margin-top:20px; color:#94a3b8; font-size:13px;">💡 <em>Contact the donor to coordinate the exact pickup time. Update delivery status once you pick up the food.</em></p>
+
+      <div style="text-align:center; margin-top:24px;">
+        <a href="{{dashboardUrl}}" class="cta-btn">View Delivery Details →</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Extra-To-Essential &bull; Reducing food waste, one meal at a time.</p>
+      <p>Thank you for volunteering! 💙</p>
+    </div>
+  </div>
+</body>
+</html>

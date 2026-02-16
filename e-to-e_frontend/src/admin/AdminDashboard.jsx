@@ -10,7 +10,6 @@ import NgoManagement from './NgoManagement'
 import DonorManagement from './DonorManagement'
 import DonationMonitor from './DonationMonitor'
 import MapControl from './MapControl'
-import GenerosityPanel from './GenerosityPanel'
 import AlertCenter from './AlertCenter'
 import {
     getCurrentUser,
@@ -427,9 +426,26 @@ export default function AdminDashboard() {
                             <DonorManagement donors={donors} onRefresh={() => fetchAllData(false)} />
                         </div>
 
-                        {/* 5 — Generosity Impact */}
-                        <div id="admin-generosity">
-                            <GenerosityPanel stats={stats} />
+                        {/* 5 — Donation QR Code */}
+                        <div id="admin-generosity" className="admin-section">
+                            <div className="admin-section__header">
+                                <h2 className="admin-section__title">Support Our Cause</h2>
+                                <p className="admin-section__subtitle">Scan to donate and help us reach more people</p>
+                            </div>
+                            <div className="admin-card" style={{ display: 'flex', justifyContent: 'center', padding: '2rem', alignItems: 'center', flexDirection: 'column', gap: '1rem' }}>
+                                <img
+                                    src="/assets/donation-qr.png"
+                                    alt="Donation QR Code"
+                                    style={{
+                                        width: '200px',
+                                        height: '200px',
+                                        objectFit: 'contain',
+                                        borderRadius: '12px',
+                                        border: '2px solid var(--tundora-20)'
+                                    }}
+                                />
+                                <p style={{ color: 'var(--tundora-60)', fontSize: '0.9rem' }}>Thank you for your generosity!</p>
+                            </div>
                         </div>
 
                         {/* 6 — Live Donation Map */}

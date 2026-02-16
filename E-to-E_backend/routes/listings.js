@@ -3,8 +3,9 @@ const router = express.Router();
 const { supabaseAdmin } = require('../config/supabaseClient');
 const { authenticateUser } = require('../middleware/authMiddleware');
 const { donorOnly, ngoOnly } = require('../middleware/roleGuards');
-const { getAvailableListingsForNGO } = require('../services/geoMatchService');
+const { getAvailableListingsForNGO, matchListingToNGOs } = require('../services/geoMatchService');
 const { notifyNearbyNGOs, notifySpecificNGO } = require('../services/geoMatchService');
+const { sendListingCreatedEmail } = require('../services/emailService');
 
 /**
  * POST /api/listings
@@ -104,7 +105,7 @@ router.post('/', authenticateUser, donorOnly, async (req, res) => {
       });
     }
 
-    // Notify nearby NGOs asynchronously
+    // Notify nearby NGOs asynchronously via push
     const notifyPromise = assigned_ngo_id
       ? notifySpecificNGO(listing.listing_id, assigned_ngo_id)
       : notifyNearbyNGOs(listing.listing_id);
@@ -112,6 +113,52 @@ router.post('/', authenticateUser, donorOnly, async (req, res) => {
     notifyPromise.catch(err => {
       console.error('Failed to notify NGOs:', err);
     });
+
+    // ─── Email nearby NGOs about the new listing (non-blocking) ───
+    (async () => {
+      try {
+        // Get donor info for email
+        const { data: donorProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('full_name, organization_name, phone')
+          .eq('id', req.user.id)
+          .single();
+
+        const donorDisplayName = donorProfile?.organization_name || donorProfile?.full_name || 'A Donor';
+
+        // Get matched NGOs
+        const matchResult = await matchListingToNGOs(listing.listing_id);
+
+        if (matchResult.success && matchResult.matches.length > 0) {
+          for (const match of matchResult.matches) {
+            // Get NGO's email
+            const { data: ngoData } = await supabaseAdmin
+              .from('ngos')
+              .select('ngo_name, profiles(email)')
+              .eq('ngo_id', match.ngo_id)
+              .single();
+
+            if (ngoData?.profiles?.email) {
+              sendListingCreatedEmail({
+                to: ngoData.profiles.email,
+                ngoName: ngoData.ngo_name || 'NGO',
+                donorName: donorDisplayName,
+                donorPhone: donorProfile?.phone || 'N/A',
+                foodType: food_type,
+                quantity: String(quantity_kg),
+                mealEquivalent: String(meal_equivalent),
+                pickupAddress: pickup_address,
+                expiryTime: new Date(expiryISO).toLocaleString(),
+                distance: match.distance_km ? String(match.distance_km.toFixed(1)) : 'N/A',
+              }).catch(err => console.error('[LISTINGS] Email to NGO failed:', err.message));
+            }
+          }
+          console.log(`[LISTINGS] Listing email notifications queued for ${matchResult.matches.length} NGO(s)`);
+        }
+      } catch (emailErr) {
+        console.error('[LISTINGS] Error sending listing emails:', emailErr.message);
+      }
+    })();
 
     res.status(201).json({
       message: 'Food listing created successfully',

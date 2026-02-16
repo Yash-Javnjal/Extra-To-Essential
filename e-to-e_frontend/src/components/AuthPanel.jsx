@@ -2,6 +2,7 @@ import { useEffect, useRef, forwardRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { useNavigate } from 'react-router-dom'
 import { loginUser, registerUser, createDonorProfile, createNGOProfile } from '../lib/api'
+import { verifyDonor, verifyNGO } from '../lib/adminApi'
 import { useAuth } from '../context/AuthContext'
 import StepIndicator from './auth/StepIndicator'
 import RoleSelector from './auth/RoleSelector'
@@ -55,7 +56,6 @@ function TermsModal({ onClose, onAccept }) {
                     <p>By registering on this platform, you acknowledge and agree to the following:</p>
                     <ul>
                         <li>This platform acts solely as a facilitator connecting food donors and NGOs.</li>
-                        <li>The platform does not prepare, cook, store, or distribute food.</li>
                         <li>All food safety responsibility lies with the donor and receiving organization.</li>
                         <li>The platform does not guarantee quality, safety, or suitability of donated food.</li>
                         <li>In case of food poisoning, contamination, or any health issue arising from food donations, the platform shall not be held legally or financially responsible.</li>
@@ -446,7 +446,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
 
         setLoading(true)
         try {
-            await createDonorProfile({
+            const result = await createDonorProfile({
                 business_type: businessType,
                 address: donorAddress,
                 city: donorCity,
@@ -454,6 +454,15 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 longitude: donorLng,
                 csr_participant: csrParticipant,
             })
+
+            // Auto-verify the donor to reduce admin manual work
+            try {
+                if (result?.donor?.donor_id) {
+                    await verifyDonor(result.donor.donor_id, true)
+                }
+            } catch (verifyErr) {
+                console.warn('Auto-verification failed (admin can verify later):', verifyErr)
+            }
 
             // Now login the user with the pending session
             const pendingSession = JSON.parse(window.sessionStorage.getItem('pending_session') || '{}')
@@ -486,7 +495,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
 
         setLoading(true)
         try {
-            await createNGOProfile({
+            const result = await createNGOProfile({
                 ngo_name: ngoName,
                 registration_number: registrationNumber || null,
                 contact_person: contactPerson,
@@ -496,6 +505,15 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 longitude: ngoLng,
                 service_radius_km: serviceRadius,
             })
+
+            // Auto-verify the NGO to reduce admin manual work
+            try {
+                if (result?.ngo?.ngo_id) {
+                    await verifyNGO(result.ngo.ngo_id, true)
+                }
+            } catch (verifyErr) {
+                console.warn('Auto-verification failed (admin can verify later):', verifyErr)
+            }
 
             // Now login the user with the pending session
             const pendingSession = JSON.parse(window.sessionStorage.getItem('pending_session') || '{}')
@@ -538,11 +556,6 @@ export const RegisterForm = forwardRef(function RegisterForm(
 
         navigate(auth.getDashboardPath('admin'))
     }
-
-    // New Google Auth Handler for Register page
-    // (Note: Register also has Google button)
-    // We can reuse the one in Login or just put it here.
-    // If user signs up with Google, they might still need to select a role if it's their first time.
 
     /* ── Render ── */
     const noStep2 = role === 'admin'
@@ -837,7 +850,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                                 type="submit"
                                 disabled={loading}
                             >
-                                {loading ? <span className="auth-btn-spinner" /> : 'Complete Registration'}
+                                {loading ? <span className="auth-btn-spinner" /> : '✓ Complete & Verify Registration'}
                             </button>
                         </form>
                     </div>
@@ -938,7 +951,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                                 type="submit"
                                 disabled={loading}
                             >
-                                {loading ? <span className="auth-btn-spinner" /> : 'Complete Registration'}
+                                {loading ? <span className="auth-btn-spinner" /> : '✓ Complete & Verify Registration'}
                             </button>
                         </form>
                     </div>

@@ -109,7 +109,7 @@ app.get('/test-email', async (req, res) => {
       result,
     });
   } catch (error) {
-    console.error(`[TEST-EMAIL] ❌ Error:`, error);
+    console.error(`[TEST-EMAIL] Error:`, error);
     res.status(500).json({ error: 'Email failed', message: error.message });
   }
 });
@@ -172,36 +172,6 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`API Base URL: http://localhost:${PORT}`);
   console.log(`Network: http://172.19.239.240:${PORT}`);
-  console.log('='.repeat(60));
-  console.log('\nAvailable Endpoints:');
-  console.log('  POST   /api/auth/register     - Register new user');
-  console.log('  POST   /api/auth/login        - Login user');
-  console.log('  POST   /api/auth/logout       - Logout user');
-  console.log('  GET    /api/auth/me           - Get current user');
-  console.log('');
-  console.log('  POST   /api/donors            - Create donor profile');
-  console.log('  GET    /api/donors/me         - Get donor profile');
-  console.log('  GET    /api/donors/me/impact  - Get donor impact');
-  console.log('');
-  console.log('  POST   /api/ngos              - Create NGO profile');
-  console.log('  GET    /api/ngos/me           - Get NGO profile');
-  console.log('  POST   /api/ngos/me/volunteers - Add volunteer');
-  console.log('  GET    /api/ngos/me/volunteers - List volunteers');
-  console.log('');
-  console.log('  POST   /api/listings          - Create food listing');
-  console.log('  GET    /api/listings          - Get available listings');
-  console.log('  GET    /api/listings/my       - Get my listings');
-  console.log('');
-  console.log('  POST   /api/claims            - Claim listing');
-  console.log('  GET    /api/claims/my         - Get my claims');
-  console.log('');
-  console.log('  POST   /api/deliveries        - Assign delivery');
-  console.log('  PUT    /api/deliveries/:id/status - Update delivery status');
-  console.log('  GET    /api/deliveries/my     - Get my deliveries');
-  console.log('');
-  console.log('  GET    /api/impact/total      - Total impact metrics');
-  console.log('  GET    /api/impact/dashboard  - Dashboard summary');
-  console.log('  GET    /api/impact/leaderboard/donors - Donor leaderboard');
   console.log('='.repeat(60));
 });
 

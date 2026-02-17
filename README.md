@@ -196,10 +196,7 @@ Backend:
 
 ## Developers
 - Yash Javanjal  
-- Tanishq Shivsharan  
-- Vinayak Sonawane  
-- Venkatesh Soma  
-- Vinay Maheshwaram  
+- Tanishq Shivsharan   
 
 ---
 

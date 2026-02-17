@@ -171,7 +171,7 @@ const ImpactStories = () => {
                     <div className="story-image-wrapper reveal-image">
                         <img
                             className="story-image"
-                            src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1400&h=600&fit=crop&q=80"
+                            src="https://vibeevest.com/wp-content/uploads/2025/03/infashion-1732595853.jpg"
                             alt="Textile warehouse — the quiet generosity behind Raghav Sethi's contributions"
                             loading="lazy"
                         />

@@ -346,7 +346,6 @@ export default function AdminDashboard() {
         totalDonors: donors.length,
         totalVolunteers: volunteers.length,
         totalDonations: listings.length,
-        totalGenerosity: listings.reduce((sum, l) => sum + (Math.round((l.quantity_kg || 0) * 150)), 0),
         activePickups: listings.filter(l =>
             ['claimed', 'scheduled', 'in_discussion'].includes(l.status)
         ).length,

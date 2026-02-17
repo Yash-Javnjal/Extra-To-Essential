@@ -18,7 +18,6 @@ const STAT_CONFIG = [
     { key: 'totalVolunteers', label: 'Volunteers', Icon: Users },
     { key: 'totalDonations', label: 'Total Donations', Icon: Package },
     { key: 'activePickups', label: 'Active Pickups', Icon: Truck },
-    { key: 'totalGenerosity', label: 'Generosity', Icon: Handshake, suffix: ' ₹' },
 ]
 
 const IMPACT_CONFIG = [

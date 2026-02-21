@@ -1,43 +1,45 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNGO } from '../context/NGOContext'
 import { animateCounter } from '../animations/ngoAnimations'
 
-const CARD_CONFIG = [
-    {
-        key: 'totalDonationsNearby',
-        label: 'Donations Nearby',
-        icon: '↓',
-        accent: 'var(--tundora)',
-    },
-    {
-        key: 'acceptedPickups',
-        label: 'Accepted Pickups',
-        icon: '✓',
-        accent: 'var(--tundora)',
-    },
-    {
-        key: 'availableVolunteers',
-        label: 'Available Volunteers',
-        icon: '◉',
-        accent: 'var(--pale-sky)',
-    },
-    {
-        key: 'completedPickups',
-        label: 'Completed Pickups',
-        icon: '★',
-        accent: 'var(--boulder)',
-    },
-    {
-        key: 'pendingRequests',
-        label: 'Pending Requests',
-        icon: '⏳',
-        accent: 'var(--pale-sky)',
-    },
-]
-
 export default function OverviewCards() {
+    const { t } = useTranslation('dashboard')
     const { stats, loading } = useNGO()
     const counterRefs = useRef({})
+
+    const CARD_CONFIG = [
+        {
+            key: 'totalDonationsNearby',
+            label: t('ngo.donationsNearby'),
+            icon: '↓',
+            accent: 'var(--tundora)',
+        },
+        {
+            key: 'acceptedPickups',
+            label: t('ngo.acceptedPickups'),
+            icon: '✓',
+            accent: 'var(--tundora)',
+        },
+        {
+            key: 'availableVolunteers',
+            label: t('ngo.availableVolunteers'),
+            icon: '◉',
+            accent: 'var(--pale-sky)',
+        },
+        {
+            key: 'completedPickups',
+            label: t('ngo.completedPickups'),
+            icon: '★',
+            accent: 'var(--boulder)',
+        },
+        {
+            key: 'pendingRequests',
+            label: t('ngo.pendingRequests'),
+            icon: '⏳',
+            accent: 'var(--pale-sky)',
+        },
+    ]
 
     useEffect(() => {
         if (loading.initial) return

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import './Hero.css'
@@ -7,6 +8,7 @@ import './Hero.css'
 gsap.registerPlugin(ScrollTrigger)
 
 const Hero = () => {
+    const { t } = useTranslation('common')
     const heroRef = useRef(null)
     const headingRef = useRef(null)
     const subRef = useRef(null)
@@ -130,7 +132,7 @@ const Hero = () => {
         }, heroRef)
 
         return () => ctx.revert()
-    }, [])
+    }, [t])
 
     const openModal = () => {
         setModalOpen(true)
@@ -183,10 +185,10 @@ const Hero = () => {
                 <div className="hero__content container">
                     <div className="hero__text">
                         <h1 ref={headingRef} className="hero__heading">
-                            Turning Surplus Into Sustenance
+                            {t('hero.heading')}
                         </h1>
                         <p ref={subRef} className="hero__subheading">
-                            Where Food Rescue Meets Climate Responsibility
+                            {t('hero.subheading')}
                         </p>
                         <div ref={btnsRef} className="hero__buttons">
                             <Link to="/login" className="btn btn--primary hero__btn" id="login-register-btn">
@@ -194,7 +196,7 @@ const Hero = () => {
                                     <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5" />
                                     <path d="M2 14c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                                 </svg>
-                                <span>Login / Register</span>
+                                <span>{t('hero.loginRegister')}</span>
                                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                                     <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
@@ -203,7 +205,7 @@ const Hero = () => {
                                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                     <polygon points="5,3 13,8 5,13" fill="currentColor" />
                                 </svg>
-                                <span>Watch Demo</span>
+                                <span>{t('hero.watchDemo')}</span>
                             </button>
                         </div>
                     </div>
@@ -211,23 +213,23 @@ const Hero = () => {
 
                 <div className="hero__scroll-indicator">
                     <div className="hero__scroll-line"></div>
-                    <span className="hero__scroll-text">Scroll</span>
+                    <span className="hero__scroll-text">{t('hero.scroll')}</span>
                 </div>
             </section>
 
             {/* Video Modal */}
             <div className={`modal-overlay ${modalOpen ? 'active' : ''}`} onClick={closeModal} id="video-modal">
                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                    <button className="modal-close" onClick={closeModal} aria-label="Close modal">
+                    <button className="modal-close" onClick={closeModal} aria-label={t('hero.closeModal')}>
                         ✕
                     </button>
 
                     {/* Motivational Text */}
                     <div className="modal-header">
                         <p className="modal-quote">
-                            "Every meal rescued is a life touched and a planet healed."
+                            {t('hero.modalQuote')}
                         </p>
-                        <span className="modal-quote-author">— Extra-To-Essential</span>
+                        <span className="modal-quote-author">{t('hero.modalQuoteAuthor')}</span>
                     </div>
 
                     {/* Video Container with Curvy Edges */}
@@ -244,7 +246,7 @@ const Hero = () => {
                                 onPlay={() => setIsPlaying(true)}
                             >
                                 <source src="/etoe.mp4" type="video/mp4" />
-                                Your browser does not support the video tag.
+                                {t('hero.videoNotSupported')}
                             </video>
                         )}
 
@@ -253,7 +255,7 @@ const Hero = () => {
                             <button
                                 className="modal-play-btn"
                                 onClick={handlePlayClick}
-                                aria-label="Play video"
+                                aria-label={t('hero.playVideo')}
                                 id="modal-play-btn"
                             >
                                 <div className="modal-play-btn__ring"></div>

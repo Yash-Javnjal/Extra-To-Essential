@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { gsap } from 'gsap'
 import { Search, Handshake, Check, X } from 'lucide-react'
 import { verifyDonor } from '../lib/adminApi'
@@ -18,6 +19,7 @@ function formatDate(ts) {
 }
 
 export default function DonorManagement({ donors, onRefresh }) {
+    const { t } = useTranslation('dashboard')
     const [search, setSearch] = useState('')
     const [filter, setFilter] = useState('all')
     const [actionLoading, setActionLoading] = useState(null)
@@ -43,25 +45,25 @@ export default function DonorManagement({ donors, onRefresh }) {
             if (onRefresh) await onRefresh()
         } catch (err) {
             console.error('Failed to approve donor:', err)
-            alert('Failed to approve donor: ' + (err.message || err.error || 'Unknown error'))
+            alert(t('failedToApproveDonor', { error: err.message || err.error || 'Unknown error' }))
         } finally {
             setActionLoading(null)
         }
-    }, [onRefresh])
+    }, [onRefresh, t])
 
     const handleDeny = useCallback(async (donorId) => {
-        if (!confirm('Are you sure you want to deny this donor?')) return
+        if (!confirm(t('areYouSureDenyDonor'))) return
         setActionLoading(donorId)
         try {
             await verifyDonor(donorId, false)
             if (onRefresh) await onRefresh()
         } catch (err) {
             console.error('Failed to deny donor:', err)
-            alert('Failed to deny donor: ' + (err.message || err.error || 'Unknown error'))
+            alert(t('failedToDenyDonor', { error: err.message || err.error || 'Unknown error' }))
         } finally {
             setActionLoading(null)
         }
-    }, [onRefresh])
+    }, [onRefresh, t])
 
     const filtered = donors.filter(d => {
         const name = d.profiles?.organization_name || ''
@@ -81,8 +83,8 @@ export default function DonorManagement({ donors, onRefresh }) {
         <section className="admin-section">
             <div className="admin-section__header">
                 <div>
-                    <h2 className="admin-section__title">Donor Management</h2>
-                    <p className="admin-section__subtitle">{donors.length} donors registered</p>
+                    <h2 className="admin-section__title">{t('donorManagement')}</h2>
+                    <p className="admin-section__subtitle">{t('donorsRegistered', { count: donors.length })}</p>
                 </div>
             </div>
 
@@ -95,7 +97,7 @@ export default function DonorManagement({ donors, onRefresh }) {
                         <input
                             type="text"
                             className="admin-search__input"
-                            placeholder="Search donors by name or city…"
+                            placeholder={t('searchDonorsByNameOrCity')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
@@ -105,20 +107,20 @@ export default function DonorManagement({ donors, onRefresh }) {
                         className={`admin-filter-btn ${filter === 'all' ? 'admin-filter-btn--active' : ''}`}
                         onClick={() => setFilter('all')}
                     >
-                        All
+                        {t('all')}
                     </button>
                     <button
                         className={`admin-filter-btn ${filter === 'verified' ? 'admin-filter-btn--active' : ''}`}
                         onClick={() => setFilter('verified')}
                     >
                         <Check size={12} strokeWidth={2.5} style={{ marginRight: 4 }} />
-                        Verified
+                        {t('verified')}
                     </button>
                     <button
                         className={`admin-filter-btn ${filter === 'unverified' ? 'admin-filter-btn--active' : ''}`}
                         onClick={() => setFilter('unverified')}
                     >
-                        Pending
+                        {t('pending')}
                     </button>
                 </div>
 
@@ -128,24 +130,24 @@ export default function DonorManagement({ donors, onRefresh }) {
                             <Handshake size={32} strokeWidth={1.2} />
                         </div>
                         <p className="admin-empty__text">
-                            {filter === 'verified' ? 'No verified donors yet.' :
-                                filter === 'unverified' ? 'No pending donor registrations.' :
-                                    'No donors found.'}
+                            {filter === 'verified' ? t('noVerifiedDonorsYet') :
+                                filter === 'unverified' ? t('noPendingDonorRegistrations') :
+                                    t('noDonorsFound')}
                         </p>
                         <p className="admin-empty__hint">
-                            {search ? 'Try adjusting your search query.' : 'Donors will appear here once they register on the platform.'}
+                            {search ? t('tryAdjustingSearchQuery') : t('donorsWillAppearHere')}
                         </p>
                     </div>
                 ) : (
                     <table className="admin-table">
                         <thead>
                             <tr>
-                                <th>Organization</th>
-                                <th>Business Type</th>
-                                <th>City</th>
-                                <th>Status</th>
-                                <th>Registered</th>
-                                <th>Actions</th>
+                                <th>{t('organization')}</th>
+                                <th>{t('businessType')}</th>
+                                <th>{t('city')}</th>
+                                <th>{t('status')}</th>
+                                <th>{t('registered')}</th>
+                                <th>{t('actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -159,7 +161,7 @@ export default function DonorManagement({ donors, onRefresh }) {
                                     <td>
                                         <span className={`admin-badge ${d.verification_status ? 'admin-badge--verified' : 'admin-badge--pending'}`}>
                                             <span className="admin-badge__dot" />
-                                            {d.verification_status ? 'Verified' : 'Pending'}
+                                            {d.verification_status ? t('verified') : t('pending')}
                                         </span>
                                     </td>
                                     <td className="admin-log-timestamp">
@@ -168,7 +170,7 @@ export default function DonorManagement({ donors, onRefresh }) {
                                     <td>
                                         <div className="admin-actions-cell">
                                             <button className="admin-action-btn admin-action-btn--view">
-                                                View
+                                                {t('view')}
                                             </button>
                                             {!d.verification_status && (
                                                 <>
@@ -178,7 +180,7 @@ export default function DonorManagement({ donors, onRefresh }) {
                                                         disabled={actionLoading === d.donor_id}
                                                     >
                                                         <Check size={12} strokeWidth={2.5} style={{ marginRight: 3 }} />
-                                                        {actionLoading === d.donor_id ? 'Approving…' : 'Approve'}
+                                                        {actionLoading === d.donor_id ? t('approving') : t('approve')}
                                                     </button>
                                                     <button
                                                         className="admin-action-btn admin-action-btn--deny"
@@ -186,7 +188,7 @@ export default function DonorManagement({ donors, onRefresh }) {
                                                         disabled={actionLoading === d.donor_id}
                                                     >
                                                         <X size={12} strokeWidth={2.5} style={{ marginRight: 3 }} />
-                                                        Deny
+                                                        {t('deny')}
                                                     </button>
                                                 </>
                                             )}

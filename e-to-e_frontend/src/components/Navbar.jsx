@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
+import LanguageSwitcher from './LanguageSwitcher/LanguageSwitcher'
 import './Navbar.css'
 
 const Navbar = () => {
+    const { t } = useTranslation('navigation')
     const [scrolled, setScrolled] = useState(false)
     const [menuOpen, setMenuOpen] = useState(false)
     const navRef = useRef(null)
@@ -59,11 +62,11 @@ const Navbar = () => {
     }, [])
 
     const navLinks = [
-        { label: 'Home', href: '/#home' },
-        { label: 'About', href: '/#about' },
-        { label: 'Impact', href: '/#impact' },
-        { label: 'Blog', href: '/#blog' },
-        { label: 'How It Works', href: '/#workflow' },
+        { label: t('home'), href: '/#home' },
+        { label: t('about'), href: '/#about' },
+        { label: t('impact'), href: '/#impact' },
+        { label: t('blog'), href: '/#blog' },
+        { label: t('howItWorks'), href: '/#workflow' },
     ]
 
     return (
@@ -88,27 +91,31 @@ const Navbar = () => {
 
                 </div>
 
-                {isAuthenticated && user ? (
-                    <>
-                        <Link to={getDashboardPath(user.role)} className="nav__cta btn btn--primary">
-                            Dashboard
+                <div className="nav__actions">
+                    {isAuthenticated && user ? (
+                        <>
+                            <Link to={getDashboardPath(user.role)} className="nav__cta btn btn--primary">
+                                {t('dashboard')}
+                            </Link>
+                            <button
+                                onClick={() => {
+                                    logout();
+                                    setMenuOpen(false);
+                                }}
+                                className="nav__cta btn btn--secondary"
+                                style={{ marginLeft: '0.5rem' }}
+                            >
+                                {t('logout')}
+                            </button>
+                        </>
+                    ) : (
+                        <Link to="/login" className="nav__cta btn btn--primary">
+                            {t('joinUs')}
                         </Link>
-                        <button
-                            onClick={() => {
-                                logout();
-                                setMenuOpen(false);
-                            }}
-                            className="nav__cta btn btn--secondary"
-                            style={{ marginLeft: '0.5rem' }}
-                        >
-                            Logout
-                        </button>
-                    </>
-                ) : (
-                    <Link to="/login" className="nav__cta btn btn--primary">
-                        Join Us
-                    </Link>
-                )}
+                    )}
+                    
+                    <LanguageSwitcher variant="dropdown" showLabels={true} />
+                </div>
 
                 <button
                     className={`nav__hamburger ${menuOpen ? 'nav__hamburger--active' : ''}`}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { gsap } from 'gsap'
+import { useTranslation } from 'react-i18next'
 import Sidebar from '../components/Sidebar'
 import StatCards from '../components/StatCards'
 import DonationForm from '../components/DonationForm'
@@ -22,6 +23,7 @@ import './DonorDashboard.css'
 
 export default function DonorDashboard() {
     /* ── State ── */
+    const { t } = useTranslation('dashboard')
     const [loading, setLoading] = useState(true)
     const [user, setUser] = useState(null)
     const [donorProfile, setDonorProfile] = useState(null)
@@ -134,12 +136,12 @@ export default function DonorDashboard() {
 
     /* ── View heading config ── */
     const VIEW_CONFIG = {
-        overview: { label: 'DASHBOARD', title: 'Your Impact at a Glance' },
-        'create-donation': { label: 'NEW DONATION', title: 'Create a Donation' },
-        'active-donations': { label: 'OPERATIONS', title: 'Active Donations' },
-        tracking: { label: 'TRACKING', title: 'Tracking Map' },
-        history: { label: 'ARCHIVE', title: 'Donation History' },
-        profile: { label: 'PROFILE', title: 'Your Profile' },
+        overview: { label: t('viewLabels.dashboard'), title: t('viewTitles.yourImpactAtAGlance') },
+        'create-donation': { label: t('viewLabels.newDonation'), title: t('viewTitles.createADonation') },
+        'active-donations': { label: t('viewLabels.operations'), title: t('viewTitles.activeDonations') },
+        tracking: { label: t('viewLabels.tracking'), title: t('viewTitles.trackingMap') },
+        history: { label: t('viewLabels.archive'), title: t('viewTitles.donationHistory') },
+        profile: { label: t('viewLabels.profile'), title: t('viewTitles.yourProfile') },
     }
 
     const currentView = VIEW_CONFIG[activeView] || VIEW_CONFIG.overview

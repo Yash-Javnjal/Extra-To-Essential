@@ -1,0 +1,254 @@
+/* =============================================
+   Language Switcher Component Styles
+   Aligned with Extra-to-Essential Design System
+   ============================================= */
+
+.language-switcher {
+  position: relative;
+  display: inline-block;
+}
+
+/* ── Main Button ── */
+.language-switcher__button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm, 0.5rem);
+  padding: 0.625rem 1rem;
+  background-color: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-2xl, 24px);
+  color: var(--text-light, white);
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all var(--transition-base, 400ms cubic-bezier(0.16, 1, 0.3, 1));
+  white-space: nowrap;
+  user-select: none;
+}
+
+.language-switcher__button:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Keyboard Focus State - Accessibility */
+.language-switcher__button:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 3px;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.language-switcher__button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.language-switcher__button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 3px;
+}
+
+/* Active/Pressed State */
+.language-switcher__button:active {
+  transform: translateY(0);
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Arrow Indicator */
+.language-switcher__arrow {
+  font-size: 0.625rem;
+  line-height: 1;
+  transition: transform var(--transition-base, 400ms cubic-bezier(0.16, 1, 0.3, 1));
+  display: inline-block;
+}
+
+.language-switcher__arrow.open {
+  transform: rotate(180deg);
+}
+
+/* ── Dropdown Menu ── */
+.language-switcher__dropdown {
+  position: absolute;
+  top: calc(100% + 0.625rem);
+  right: 0;
+  min-width: 160px;
+  background-color: var(--white, white);
+  border: 1px solid rgba(68, 60, 60, 0.08);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--shadow-lg, 0 8px 32px rgba(68, 60, 60, 0.1));
+  z-index: 1000;
+  overflow: hidden;
+  animation: dropdownFadeIn 300ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Language Options ── */
+.language-switcher__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: transparent;
+  border: none;
+  color: var(--text-primary, #443c3c);
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast, 200ms cubic-bezier(0.16, 1, 0.3, 1));
+  position: relative;
+}
+
+.language-switcher__option:hover {
+  background-color: rgba(68, 60, 60, 0.04);
+  color: var(--text-primary, #443c3c);
+}
+
+/* Keyboard Focus State for Options */
+.language-switcher__option:focus {
+  outline: 2px solid var(--tundora, #443c3c);
+  outline-offset: -2px;
+  background-color: rgba(68, 60, 60, 0.06);
+  z-index: 1;
+}
+
+.language-switcher__option:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.language-switcher__option:focus-visible {
+  outline: 2px solid var(--tundora, #443c3c);
+  outline-offset: -2px;
+  background-color: rgba(68, 60, 60, 0.06);
+}
+
+/* Active Language Indicator */
+.language-switcher__option.active {
+  background-color: rgba(68, 60, 60, 0.08);
+  color: var(--tundora, #443c3c);
+  font-weight: 600;
+}
+
+.language-switcher__option.active:hover {
+  background-color: rgba(68, 60, 60, 0.1);
+}
+
+/* Checkmark for Active Language */
+.language-switcher__checkmark {
+  font-size: 0.875rem;
+  color: var(--tundora, #443c3c);
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* ── Support for Indian Scripts ── */
+.language-switcher__button,
+.language-switcher__option {
+  /* Ensure proper rendering of Devanagari, Telugu, and Kannada scripts */
+  font-feature-settings: 'kern' 1, 'liga' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Mobile Responsive ── */
+@media (max-width: 768px) {
+  .language-switcher__button {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+    gap: 0.375rem;
+  }
+
+  .language-switcher__dropdown {
+    min-width: 140px;
+    border-radius: var(--radius-md, 8px);
+  }
+
+  .language-switcher__option {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  .language-switcher__arrow {
+    font-size: 0.5625rem;
+  }
+}
+
+/* Small Mobile Devices */
+@media (max-width: 480px) {
+  .language-switcher__button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .language-switcher__dropdown {
+    min-width: 130px;
+  }
+
+  .language-switcher__option {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* ── High Contrast Mode Support ── */
+@media (prefers-contrast: high) {
+  .language-switcher__button {
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .language-switcher__button:focus-visible {
+    outline-width: 3px;
+  }
+
+  .language-switcher__option:focus-visible {
+    outline-width: 3px;
+  }
+}
+
+/* ── Reduced Motion Support ── */
+@media (prefers-reduced-motion: reduce) {
+  .language-switcher__button,
+  .language-switcher__arrow,
+  .language-switcher__option {
+    transition: none;
+  }
+
+  .language-switcher__dropdown {
+    animation: none;
+  }
+
+  .language-switcher__button:hover {
+    transform: none;
+  }
+}
+
+/* ── Dark Background Variant ── */
+.language-switcher--dark .language-switcher__button {
+  border-color: rgba(68, 60, 60, 0.2);
+  color: var(--text-primary, #443c3c);
+}
+
+.language-switcher--dark .language-switcher__button:hover {
+  background-color: rgba(68, 60, 60, 0.05);
+  border-color: rgba(68, 60, 60, 0.3);
+}
+
+.language-switcher--dark .language-switcher__button:focus-visible {
+  outline-color: var(--tundora, #443c3c);
+}

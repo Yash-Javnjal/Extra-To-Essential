@@ -96,6 +96,12 @@
     padding: 10px 24px;
 }
 
+.nav__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
 .nav__cta--mobile {
     display: none;
 }
@@ -181,6 +187,10 @@
 
     .nav__hamburger {
         display: flex;
+    }
+
+    .nav__actions {
+        display: none;
     }
 
     .nav__cta {

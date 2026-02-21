@@ -1,0 +1,7 @@
+{
+  "networkError": "Network error. Please try again.",
+  "unauthorized": "You are not authorized to access this resource.",
+  "notFound": "The requested resource was not found.",
+  "serverError": "Server error. Please try again later.",
+  "validationError": "Please check your input and try again."
+}

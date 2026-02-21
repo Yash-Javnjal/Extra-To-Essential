@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import './Footer.css'
@@ -7,6 +8,7 @@ import './Footer.css'
 gsap.registerPlugin(ScrollTrigger)
 
 const Footer = () => {
+    const { t } = useTranslation('common')
     const footerRef = useRef(null)
 
     useEffect(() => {
@@ -38,35 +40,35 @@ const Footer = () => {
                                 <circle cx="14" cy="14" r="13" stroke="currentColor" strokeWidth="1.5" />
                                 <path d="M8 14L12 18L20 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                            <span className="footer__logo-text">Extra-To-Essential</span>
+                            <span className="footer__logo-text">{t('footer.brandName')}</span>
                         </div>
                         <p className="footer__tagline">
-                            Bridging surplus to sustenance. One meal, one community, one planet at a time.
+                            {t('footer.tagline')}
                         </p>
                     </div>
 
                     <div className="footer__links-group">
-                        <h4 className="footer__links-title">Company</h4>
+                        <h4 className="footer__links-title">{t('footer.companyTitle')}</h4>
                         <ul className="footer__links">
-                            <li><a href="#about" className="footer__link">About Us</a></li>
-                            <li><a href="#impact" className="footer__link">Our Impact</a></li>
-                            <li><a href="#blog" className="footer__link">Blog</a></li>
-                            <li><a href="#" className="footer__link">Careers</a></li>
+                            <li><a href="#about" className="footer__link">{t('footer.aboutUs')}</a></li>
+                            <li><a href="#impact" className="footer__link">{t('footer.ourImpact')}</a></li>
+                            <li><a href="#blog" className="footer__link">{t('footer.blog')}</a></li>
+                            <li><a href="#" className="footer__link">{t('footer.careers')}</a></li>
                         </ul>
                     </div>
 
                     <div className="footer__links-group">
-                        <h4 className="footer__links-title">Get Involved</h4>
+                        <h4 className="footer__links-title">{t('footer.getInvolvedTitle')}</h4>
                         <ul className="footer__links">
-                            <li><a href="#" className="footer__link">Volunteer</a></li>
-                            <li><a href="#" className="footer__link">Partner With Us</a></li>
-                            <li><a href="#" className="footer__link">Donate</a></li>
-                            <li><Link to="/contact" className="footer__link">Contact</Link></li>
+                            <li><a href="#" className="footer__link">{t('footer.volunteer')}</a></li>
+                            <li><a href="#" className="footer__link">{t('footer.partnerWithUs')}</a></li>
+                            <li><a href="#" className="footer__link">{t('footer.donate')}</a></li>
+                            <li><Link to="/contact" className="footer__link">{t('contact')}</Link></li>
                         </ul>
                     </div>
 
                     <div className="footer__links-group">
-                        <h4 className="footer__links-title">Connect</h4>
+                        <h4 className="footer__links-title">{t('footer.connectTitle')}</h4>
                         <div className="footer__social">
                             {/* Twitter/X */}
                             <a href="#" className="footer__social-link" aria-label="Twitter" id="social-twitter">
@@ -103,10 +105,10 @@ const Footer = () => {
 
                 <div className="footer__bottom">
                     <p className="footer__copyright">
-                        © 2026 Extra-To-Essential. All rights reserved.
+                        {t('footer.copyright')}
                     </p>
                     <p className="footer__credit">
-                        By Yash Javanjal and Tanishq Shivasharan
+                        {t('footer.credit')}
                     </p>
                 </div>
             </div>

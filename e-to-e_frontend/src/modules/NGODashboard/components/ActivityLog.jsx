@@ -1,33 +1,35 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNGO } from '../context/NGOContext'
 import { animateRowsStagger } from '../animations/ngoAnimations'
 
-const EVENT_LABELS = {
-    claim_created: 'Donation Claimed',
-    claim_cancelled: 'Claim Cancelled',
-    claim_status_changed: 'Claim Status Changed',
-    delivery_assigned: 'Volunteer Assigned',
-    delivery_status_updated: 'Delivery Updated',
-    volunteer_added: 'Volunteer Added',
-    volunteer_updated: 'Volunteer Updated',
-    volunteer_removed: 'Volunteer Removed',
-    new_donation_detected: 'New Donation',
-}
-
-const EVENT_ICONS = {
-    claim_created: '✓',
-    claim_cancelled: '✕',
-    claim_status_changed: '⟳',
-    delivery_assigned: '◉',
-    delivery_status_updated: '↑',
-    volunteer_added: '+',
-    volunteer_updated: '✎',
-    volunteer_removed: '−',
-    new_donation_detected: '↓',
-}
-
 export default function ActivityLog() {
+    const { t } = useTranslation('dashboard')
     const { activityLog } = useNGO()
+
+    const EVENT_LABELS = {
+        claim_created: t('ngo.donationClaimed'),
+        claim_cancelled: t('ngo.claimCancelled'),
+        claim_status_changed: t('ngo.claimStatusChanged'),
+        delivery_assigned: t('ngo.volunteerAssigned'),
+        delivery_status_updated: t('ngo.deliveryUpdated'),
+        volunteer_added: t('ngo.volunteerAdded'),
+        volunteer_updated: t('ngo.volunteerUpdated'),
+        volunteer_removed: t('ngo.volunteerRemoved'),
+        new_donation_detected: t('ngo.newDonation'),
+    }
+
+    const EVENT_ICONS = {
+        claim_created: '✓',
+        claim_cancelled: '✕',
+        claim_status_changed: '⟳',
+        delivery_assigned: '◉',
+        delivery_status_updated: '↑',
+        volunteer_added: '+',
+        volunteer_updated: '✎',
+        volunteer_removed: '−',
+        new_donation_detected: '↓',
+    }
 
     useEffect(() => {
         if (activityLog.length > 0) {
@@ -39,8 +41,8 @@ export default function ActivityLog() {
         return (
             <div className="ngo-empty-state">
                 <span className="ngo-empty-state__icon">☰</span>
-                <h4>No activity yet</h4>
-                <p>Your actions will be logged here in real-time.</p>
+                <h4>{t('ngo.noActivityYet')}</h4>
+                <p>{t('ngo.actionsWillBeLogged')}</p>
             </div>
         )
     }
@@ -50,9 +52,9 @@ export default function ActivityLog() {
             <table className="ngo-table">
                 <thead>
                     <tr>
-                        <th>Time</th>
-                        <th>Event</th>
-                        <th>Details</th>
+                        <th>{t('ngo.time')}</th>
+                        <th>{t('ngo.event')}</th>
+                        <th>{t('ngo.details')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -77,10 +79,10 @@ export default function ActivityLog() {
                             </td>
                             <td>
                                 <span className="ngo-cell-sub">
-                                    {log.listing_id && `Listing: ${log.listing_id.slice(0, 8)}…`}
-                                    {log.claim_id && `Claim: ${log.claim_id.slice(0, 8)}…`}
-                                    {log.volunteer_id && `Vol: ${log.volunteer_id.slice(0, 8)}…`}
-                                    {log.delivery_id && `Del: ${log.delivery_id.slice(0, 8)}…`}
+                                    {log.listing_id && `${t('ngo.listing')}: ${log.listing_id.slice(0, 8)}…`}
+                                    {log.claim_id && `${t('ngo.claim')}: ${log.claim_id.slice(0, 8)}…`}
+                                    {log.volunteer_id && `${t('ngo.vol')}: ${log.volunteer_id.slice(0, 8)}…`}
+                                    {log.delivery_id && `${t('ngo.del')}: ${log.delivery_id.slice(0, 8)}…`}
                                     {log.volunteer_name && log.volunteer_name}
                                     {log.food_type && log.food_type}
                                     {log.status && ` → ${log.status}`}

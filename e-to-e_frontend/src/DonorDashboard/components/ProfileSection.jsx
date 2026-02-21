@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { gsap } from 'gsap'
 
 export default function ProfileSection({ user, donorProfile, impact }) {
+    const { t } = useTranslation('dashboard')
     const panelRef = useRef(null)
 
     const email = user?.email || ''
@@ -25,15 +27,15 @@ export default function ProfileSection({ user, donorProfile, impact }) {
     }, [])
 
     const details = [
-        { label: 'Full Name', value: displayName },
-        { label: 'Email Address', value: email || '—' },
-        { label: 'Phone', value: user?.phone || '—' },
-        { label: 'Role', value: role.charAt(0).toUpperCase() + role.slice(1) },
-        { label: 'Organization', value: user?.organization_name || donorProfile?.organization_name || '—' },
-        { label: 'Address', value: donorProfile?.address || user?.address || '—' },
-        { label: 'CSR Participant', value: donorProfile?.csr_participant ? 'Yes' : 'No' },
+        { label: t('fullName'), value: displayName },
+        { label: t('emailAddress'), value: email || '—' },
+        { label: t('phone'), value: user?.phone || '—' },
+        { label: t('role'), value: role.charAt(0).toUpperCase() + role.slice(1) },
+        { label: t('organization'), value: user?.organization_name || donorProfile?.organization_name || '—' },
+        { label: t('address'), value: donorProfile?.address || user?.address || '—' },
+        { label: t('csrParticipant'), value: donorProfile?.csr_participant ? t('yes') : t('no') },
         {
-            label: 'Member Since',
+            label: t('memberSince'),
             value: user?.created_at
                 ? new Date(user.created_at).toLocaleDateString('en-IN', {
                     day: 'numeric',
@@ -45,10 +47,10 @@ export default function ProfileSection({ user, donorProfile, impact }) {
     ]
 
     const impactStats = [
-        { label: 'Total Donations', value: impact?.listing_count ?? '—' },
-        { label: 'Meals Shared', value: impact?.total_meals ?? '—' },
-        { label: 'CO₂ Reduced', value: impact?.total_co2_kg ? `${impact.total_co2_kg.toFixed(1)} kg` : '—' },
-        { label: 'Food Saved (kg)', value: impact?.total_food_kg ? `${impact.total_food_kg} kg` : '—' },
+        { label: t('totalDonationsCount'), value: impact?.listing_count ?? '—' },
+        { label: t('mealsShared'), value: impact?.total_meals ?? '—' },
+        { label: t('co2Reduced'), value: impact?.total_co2_kg ? `${impact.total_co2_kg.toFixed(1)} kg` : '—' },
+        { label: t('foodSaved'), value: impact?.total_food_kg ? `${impact.total_food_kg} kg` : '—' },
     ]
 
     return (
@@ -70,7 +72,7 @@ export default function ProfileSection({ user, donorProfile, impact }) {
                     </div>
                 </div>
                 <div className="dd-profile-identity__right">
-                    <span className="dd-profile-identity__label">IDENTITY</span>
+                    <span className="dd-profile-identity__label">{t('identity')}</span>
                     <h2 className="dd-profile-identity__name">{displayName}</h2>
                     <span className="dd-profile-identity__role-badge">
                         {role.charAt(0).toUpperCase() + role.slice(1)}
@@ -81,7 +83,7 @@ export default function ProfileSection({ user, donorProfile, impact }) {
 
             {/* ── Details Grid ── */}
             <div className="dd-profile-details-card">
-                <span className="dd-profile-details-card__label">PERSONAL INFORMATION</span>
+                <span className="dd-profile-details-card__label">{t('personalInformation')}</span>
                 <div className="dd-profile-details-grid">
                     {details.map((d) => (
                         <div key={d.label} className="dd-profile-detail-item">
@@ -94,7 +96,7 @@ export default function ProfileSection({ user, donorProfile, impact }) {
 
             {/* ── Impact Summary ── */}
             <div className="dd-profile-details-card">
-                <span className="dd-profile-details-card__label">IMPACT SUMMARY</span>
+                <span className="dd-profile-details-card__label">{t('impactSummary')}</span>
                 <div className="dd-profile-impact-grid">
                     {impactStats.map((s) => (
                         <div key={s.label} className="dd-profile-impact-item">

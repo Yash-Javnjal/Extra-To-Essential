@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNGO } from '../context/NGOContext'
 import { animateRowsStagger, animateButtonPress, playSuccessRing, flashRow } from '../animations/ngoAnimations'
 
 export default function AcceptedPickups() {
+    const { t } = useTranslation('dashboard')
     const {
         claims,
         deliveries,
@@ -74,14 +76,14 @@ export default function AcceptedPickups() {
     const handleCancel = useCallback(
         async (claimId, e) => {
             animateButtonPress(e.currentTarget)
-            if (!window.confirm('Cancel this claim?')) return
+            if (!window.confirm(t('ngo.cancelClaim'))) return
             try {
                 await handleCancelClaim(claimId)
             } catch {
                 /* handled in context */
             }
         },
-        [handleCancelClaim]
+        [handleCancelClaim, t]
     )
 
     function getStatusBadge(claim, delivery) {
@@ -94,7 +96,7 @@ export default function AcceptedPickups() {
             }
             return (
                 <span className={`ngo-badge ${statusMap[delivery.delivery_status] || ''}`}>
-                    {delivery.delivery_status?.replace('_', ' ') || '—'}
+                    {t(`ngo.${delivery.delivery_status}`, { defaultValue: delivery.delivery_status?.replace('_', ' ') || '—' })}
                 </span>
             )
         }
@@ -106,7 +108,7 @@ export default function AcceptedPickups() {
         }
         return (
             <span className={`ngo-badge ${claimStatusMap[claim.status] || ''}`}>
-                {claim.status || '—'}
+                {t(`ngo.${claim.status}`, { defaultValue: claim.status || '—' })}
             </span>
         )
     }
@@ -126,7 +128,7 @@ export default function AcceptedPickups() {
             <div className="ngo-error-state">
                 <span className="ngo-error-state__icon">⚠</span>
                 <p>{errors.claims}</p>
-                <button className="ngo-btn ngo-btn--outline" onClick={fetchClaims}>Retry</button>
+                <button className="ngo-btn ngo-btn--outline" onClick={fetchClaims}>{t('retry', { ns: 'common' })}</button>
             </div>
         )
     }
@@ -135,8 +137,8 @@ export default function AcceptedPickups() {
         return (
             <div className="ngo-empty-state">
                 <span className="ngo-empty-state__icon">✓</span>
-                <h4>No accepted pickups yet</h4>
-                <p>Accept incoming donations to start managing pickups.</p>
+                <h4>{t('ngo.noAcceptedPickupsYet')}</h4>
+                <p>{t('ngo.acceptIncomingDonations')}</p>
             </div>
         )
     }
@@ -146,12 +148,12 @@ export default function AcceptedPickups() {
             <table className="ngo-table">
                 <thead>
                     <tr>
-                        <th>Donation</th>
-                        <th>Donor</th>
-                        <th>Pickup Time</th>
-                        <th>Status</th>
-                        <th>Volunteer</th>
-                        <th>Actions</th>
+                        <th>{t('ngo.donation')}</th>
+                        <th>{t('ngo.donor')}</th>
+                        <th>{t('ngo.pickupTime')}</th>
+                        <th>{t('status')}</th>
+                        <th>{t('ngo.volunteer')}</th>
+                        <th>{t('actions')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -194,7 +196,7 @@ export default function AcceptedPickups() {
                                                         setAssigningClaimId(claim.claim_id)
                                                         setSelectedVolunteer(delivery.volunteer_id || '')
                                                     }}
-                                                    title="Change Volunteer"
+                                                    title={t('ngo.changeVolunteer')}
                                                     style={{ marginLeft: '8px', opacity: 0.6, cursor: 'pointer', background: 'none', border: 'none' }}
                                                 >
                                                     ✎
@@ -208,7 +210,7 @@ export default function AcceptedPickups() {
                                                 value={selectedVolunteer}
                                                 onChange={(e) => setSelectedVolunteer(e.target.value)}
                                             >
-                                                <option value="">Select...</option>
+                                                <option value="">{t('ngo.select')}</option>
                                                 {availableVolunteers.map((v) => (
                                                     <option key={v.volunteer_id} value={v.volunteer_id}>
                                                         {v.full_name} ({v.vehicle_type || 'N/A'})
@@ -220,7 +222,7 @@ export default function AcceptedPickups() {
                                                 onClick={(e) => handleAssign(claim.claim_id, delivery?.delivery_id, e)}
                                                 disabled={!selectedVolunteer || loading.action}
                                             >
-                                                Go
+                                                {t('ngo.go')}
                                             </button>
                                             <button
                                                 className="ngo-btn ngo-btn--sm ngo-btn--ghost"
@@ -235,7 +237,7 @@ export default function AcceptedPickups() {
                                             onClick={() => setAssigningClaimId(claim.claim_id)}
                                             disabled={loading.action}
                                         >
-                                            Assign
+                                            {t('ngo.assign')}
                                         </button>
                                     )}
                                 </td>
@@ -247,7 +249,7 @@ export default function AcceptedPickups() {
                                                 onClick={(e) => handleStatusUpdate(delivery.delivery_id, 'in_transit', e)}
                                                 disabled={loading.action}
                                             >
-                                                In Transit
+                                                {t('ngo.inTransit')}
                                             </button>
                                         )}
                                         {delivery && delivery.delivery_status === 'in_transit' && (
@@ -256,7 +258,7 @@ export default function AcceptedPickups() {
                                                 onClick={(e) => handleStatusUpdate(delivery.delivery_id, 'delivered', e)}
                                                 disabled={loading.action}
                                             >
-                                                Delivered
+                                                {t('ngo.delivered')}
                                             </button>
                                         )}
                                         {!delivery && (
@@ -265,7 +267,7 @@ export default function AcceptedPickups() {
                                                 onClick={(e) => handleCancel(claim.claim_id, e)}
                                                 disabled={loading.action}
                                             >
-                                                Cancel
+                                                {t('cancel', { ns: 'common' })}
                                             </button>
                                         )}
                                     </div>

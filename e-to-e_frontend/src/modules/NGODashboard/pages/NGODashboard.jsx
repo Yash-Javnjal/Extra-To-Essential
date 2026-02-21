@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { NGOProvider, useNGO } from '../context/NGOContext'
 import Sidebar from '../components/Sidebar'
 import OverviewCards from '../components/OverviewCards'
@@ -13,25 +14,8 @@ import { Bell, X } from 'lucide-react'
 import { runPageLoadSequence, animateViewEnter, killAllAnimations } from '../animations/ngoAnimations'
 import './NGODashboard.css'
 
-const VIEW_TITLES = {
-    overview: 'Operations Overview',
-    incoming: 'Incoming Donations',
-    pickups: 'Accepted Pickups',
-    volunteers: 'Volunteer Management',
-    map: 'Operations Map',
-    log: 'Activity Log',
-}
-
-const VIEW_SUBTITLES = {
-    overview: 'Real-time logistics command center',
-    incoming: 'Available food donations across all regions',
-    pickups: 'Manage claimed donations and assign volunteers',
-    volunteers: 'Add, edit, and manage your volunteer team',
-    map: 'Live map showing active donations and mission progress',
-    log: 'Session activity history',
-}
-
 function DashboardInner() {
+    const { t } = useTranslation('dashboard')
     const { loading, errors, ngoProfile, fetchListings } = useNGO()
     const socket = useSocket()
     const [activeView, setActiveView] = useState('overview')
@@ -40,6 +24,24 @@ function DashboardInner() {
     const [alerts, setAlerts] = useState([])
     const contentRef = useRef(null)
     const hasAnimated = useRef(false)
+
+    const VIEW_TITLES = {
+        overview: t('ngo.operationsOverview'),
+        incoming: t('ngo.incomingDonations'),
+        pickups: t('ngo.acceptedPickups'),
+        volunteers: t('ngo.volunteerManagement'),
+        map: t('ngo.operationsMap'),
+        log: t('ngo.activityLog'),
+    }
+
+    const VIEW_SUBTITLES = {
+        overview: t('ngo.realtimeLogisticsCenter'),
+        incoming: t('ngo.availableFoodDonations'),
+        pickups: t('ngo.manageClaimedDonations'),
+        volunteers: t('ngo.addEditManageVolunteers'),
+        map: t('ngo.liveMapShowingDonations'),
+        log: t('ngo.sessionActivityHistory'),
+    }
 
     /* Cinematic page load */
     useEffect(() => {
@@ -100,7 +102,7 @@ function DashboardInner() {
         return (
             <div className="ngo-loading-screen">
                 <div className="ngo-loading-spinner" />
-                <p>Loading NGO Dashboard…</p>
+                <p>{t('ngo.loadingNGODashboard')}</p>
             </div>
         )
     }
@@ -111,10 +113,10 @@ function DashboardInner() {
             <div className="ngo-loading-screen">
                 <div className="ngo-error-state">
                     <span className="ngo-error-state__icon">⚠</span>
-                    <h3>Failed to load dashboard</h3>
+                    <h3>{t('ngo.failedToLoadDashboard')}</h3>
                     <p>{errors.init || errors.profile}</p>
                     <button className="ngo-btn ngo-btn--primary" onClick={() => window.location.reload()}>
-                        Retry
+                        {t('retry', { ns: 'common' })}
                     </button>
                 </div>
             </div>
@@ -130,11 +132,11 @@ function DashboardInner() {
                         <div className="ngo-section-divider" />
                         <div className="ngo-overview-panels">
                             <div className="ngo-overview-panel">
-                                <h4 className="ngo-panel-title">Recent Incoming</h4>
+                                <h4 className="ngo-panel-title">{t('ngo.recentIncoming')}</h4>
                                 <IncomingDonations />
                             </div>
                             <div className="ngo-overview-panel">
-                                <h4 className="ngo-panel-title">Active Pickups</h4>
+                                <h4 className="ngo-panel-title">{t('ngo.activePickups')}</h4>
                                 <AcceptedPickups />
                             </div>
                         </div>
@@ -187,18 +189,24 @@ function DashboardInner() {
                             {showNotifications && (
                                 <div className="ngo-notification-dropdown">
                                     <div className="ngo-notification-dropdown__header">
-                                        <h4>Notifications</h4>
+                                        <h4>{t('ngo.notifications')}</h4>
                                         <button onClick={() => setShowNotifications(false)}><X size={16} /></button>
                                     </div>
                                     <div className="ngo-notification-dropdown__body">
                                         {alerts.length === 0 ? (
-                                            <p className="ngo-notification-empty">No new notifications</p>
+                                            <p className="ngo-notification-empty">{t('ngo.noNewNotifications')}</p>
                                         ) : (
                                             alerts.map(alert => (
                                                 <div key={alert.id} className="ngo-notification-item">
                                                     <div className="ngo-notification-item__icon">🍱</div>
                                                     <div className="ngo-notification-item__content">
-                                                        <p>User <strong>{alert.donor_name}</strong> has made a donation of {alert.quantity_kg}kg {alert.food_type}</p>
+                                                        <p dangerouslySetInnerHTML={{ 
+                                                            __html: t('ngo.userDonatedFood', { 
+                                                                donorName: alert.donor_name, 
+                                                                quantity: alert.quantity_kg, 
+                                                                foodType: alert.food_type 
+                                                            }) 
+                                                        }} />
                                                         <span>{alert.time}</span>
                                                     </div>
                                                 </div>
@@ -210,7 +218,7 @@ function DashboardInner() {
                         </div>
 
                         <span className="ngo-live-dot" />
-                        <span className="ngo-live-label">Live</span>
+                        <span className="ngo-live-label">{t('ngo.live')}</span>
                     </div>
                 </div>
 

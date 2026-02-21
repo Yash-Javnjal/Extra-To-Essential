@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { gsap } from 'gsap'
 import { Search, Building2, Check, X, Ban } from 'lucide-react'
 import { verifyNGO } from '../lib/adminApi'
@@ -18,6 +19,7 @@ function formatDate(ts) {
 }
 
 export default function NgoManagement({ ngos, onRefresh }) {
+    const { t } = useTranslation('dashboard')
     const [search, setSearch] = useState('')
     const [filter, setFilter] = useState('all')
     const [actionLoading, setActionLoading] = useState(null)
@@ -43,39 +45,39 @@ export default function NgoManagement({ ngos, onRefresh }) {
             if (onRefresh) await onRefresh()
         } catch (err) {
             console.error('Failed to approve NGO:', err)
-            alert('Failed to approve NGO: ' + (err.message || err.error || 'Unknown error'))
+            alert(t('failedToApproveNGO', { error: err.message || err.error || 'Unknown error' }))
         } finally {
             setActionLoading(null)
         }
-    }, [onRefresh])
+    }, [onRefresh, t])
 
     const handleDeny = useCallback(async (ngoId) => {
-        if (!confirm('Are you sure you want to deny this NGO?')) return
+        if (!confirm(t('areYouSureDenyNGO'))) return
         setActionLoading(ngoId)
         try {
             await verifyNGO(ngoId, false)
             if (onRefresh) await onRefresh()
         } catch (err) {
             console.error('Failed to deny NGO:', err)
-            alert('Failed to deny NGO: ' + (err.message || err.error || 'Unknown error'))
+            alert(t('failedToDenyNGO', { error: err.message || err.error || 'Unknown error' }))
         } finally {
             setActionLoading(null)
         }
-    }, [onRefresh])
+    }, [onRefresh, t])
 
     const handleSuspend = useCallback(async (ngoId) => {
-        if (!confirm('Are you sure you want to suspend this NGO?')) return
+        if (!confirm(t('areYouSureSuspendNGO'))) return
         setActionLoading(ngoId)
         try {
             await verifyNGO(ngoId, false)
             if (onRefresh) await onRefresh()
         } catch (err) {
             console.error('Failed to suspend NGO:', err)
-            alert('Failed to suspend NGO: ' + (err.message || err.error || 'Unknown error'))
+            alert(t('failedToSuspendNGO', { error: err.message || err.error || 'Unknown error' }))
         } finally {
             setActionLoading(null)
         }
-    }, [onRefresh])
+    }, [onRefresh, t])
 
     const filtered = ngos.filter(ngo => {
         const matchSearch = !search ||
@@ -93,8 +95,8 @@ export default function NgoManagement({ ngos, onRefresh }) {
         <section className="admin-section">
             <div className="admin-section__header">
                 <div>
-                    <h2 className="admin-section__title">NGO Management</h2>
-                    <p className="admin-section__subtitle">{ngos.length} organizations registered</p>
+                    <h2 className="admin-section__title">{t('ngoManagement')}</h2>
+                    <p className="admin-section__subtitle">{t('organizationsRegistered', { count: ngos.length })}</p>
                 </div>
             </div>
 
@@ -107,7 +109,7 @@ export default function NgoManagement({ ngos, onRefresh }) {
                         <input
                             type="text"
                             className="admin-search__input"
-                            placeholder="Search NGOs by name or city…"
+                            placeholder={t('searchNGOsByNameOrCity')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
@@ -117,20 +119,20 @@ export default function NgoManagement({ ngos, onRefresh }) {
                         className={`admin-filter-btn ${filter === 'all' ? 'admin-filter-btn--active' : ''}`}
                         onClick={() => setFilter('all')}
                     >
-                        All
+                        {t('all')}
                     </button>
                     <button
                         className={`admin-filter-btn ${filter === 'verified' ? 'admin-filter-btn--active' : ''}`}
                         onClick={() => setFilter('verified')}
                     >
                         <Check size={12} strokeWidth={2.5} style={{ marginRight: 4 }} />
-                        Verified
+                        {t('verified')}
                     </button>
                     <button
                         className={`admin-filter-btn ${filter === 'unverified' ? 'admin-filter-btn--active' : ''}`}
                         onClick={() => setFilter('unverified')}
                     >
-                        Pending
+                        {t('pending')}
                     </button>
                 </div>
 
@@ -140,25 +142,25 @@ export default function NgoManagement({ ngos, onRefresh }) {
                             <Building2 size={32} strokeWidth={1.2} />
                         </div>
                         <p className="admin-empty__text">
-                            {filter === 'verified' ? 'No verified NGOs yet.' :
-                                filter === 'unverified' ? 'No pending NGO registrations.' :
-                                    'No NGOs found.'}
+                            {filter === 'verified' ? t('noVerifiedNGOsYet') :
+                                filter === 'unverified' ? t('noPendingNGORegistrations') :
+                                    t('noNGOsFound')}
                         </p>
                         <p className="admin-empty__hint">
-                            {search ? 'Try adjusting your search query.' : 'NGOs will appear here once they register on the platform.'}
+                            {search ? t('tryAdjustingSearchQuery') : t('ngosWillAppearHere')}
                         </p>
                     </div>
                 ) : (
                     <table className="admin-table">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>City</th>
-                                <th>Status</th>
-                                <th>Radius</th>
-                                <th>Phone</th>
-                                <th>Registered</th>
-                                <th>Actions</th>
+                                <th>{t('name')}</th>
+                                <th>{t('city')}</th>
+                                <th>{t('status')}</th>
+                                <th>{t('radius')}</th>
+                                <th>{t('phone')}</th>
+                                <th>{t('registered')}</th>
+                                <th>{t('actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -169,7 +171,7 @@ export default function NgoManagement({ ngos, onRefresh }) {
                                     <td>
                                         <span className={`admin-badge ${ngo.verification_status ? 'admin-badge--verified' : 'admin-badge--pending'}`}>
                                             <span className="admin-badge__dot" />
-                                            {ngo.verification_status ? 'Verified' : 'Pending'}
+                                            {ngo.verification_status ? t('verified') : t('pending')}
                                         </span>
                                     </td>
                                     <td>{ngo.service_radius_km ? `${ngo.service_radius_km} km` : '—'}</td>
@@ -187,7 +189,7 @@ export default function NgoManagement({ ngos, onRefresh }) {
                                                         disabled={actionLoading === ngo.ngo_id}
                                                     >
                                                         <Check size={12} strokeWidth={2.5} style={{ marginRight: 3 }} />
-                                                        {actionLoading === ngo.ngo_id ? 'Approving…' : 'Approve'}
+                                                        {actionLoading === ngo.ngo_id ? t('approving') : t('approve')}
                                                     </button>
                                                     <button
                                                         className="admin-action-btn admin-action-btn--deny"
@@ -195,7 +197,7 @@ export default function NgoManagement({ ngos, onRefresh }) {
                                                         disabled={actionLoading === ngo.ngo_id}
                                                     >
                                                         <X size={12} strokeWidth={2.5} style={{ marginRight: 3 }} />
-                                                        Deny
+                                                        {t('deny')}
                                                     </button>
                                                 </>
                                             )}
@@ -206,7 +208,7 @@ export default function NgoManagement({ ngos, onRefresh }) {
                                                     disabled={actionLoading === ngo.ngo_id}
                                                 >
                                                     <Ban size={12} strokeWidth={2} style={{ marginRight: 3 }} />
-                                                    {actionLoading === ngo.ngo_id ? 'Suspending…' : 'Suspend'}
+                                                    {actionLoading === ngo.ngo_id ? t('suspending') : t('suspend')}
                                                 </button>
                                             )}
                                         </div>

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { animateHistoryRows } from '../animations/dashboardAnimations'
 import { SkeletonTable } from './Loader'
 
@@ -12,6 +13,8 @@ function formatDate(dateStr) {
 }
 
 export default function HistoryTable({ listings, loading, error }) {
+    const { t } = useTranslation('dashboard')
+    
     useEffect(() => {
         if (!loading && listings?.length > 0) {
             setTimeout(() => animateHistoryRows(), 100)
@@ -26,7 +29,7 @@ export default function HistoryTable({ listings, loading, error }) {
                 <span className="dd-empty-state__icon">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
                 </span>
-                <p>Failed to load donation history.</p>
+                <p>{t('failedToLoadHistory')}</p>
                 <p className="dd-empty-state__sub">{error}</p>
             </div>
         )
@@ -38,9 +41,9 @@ export default function HistoryTable({ listings, loading, error }) {
                 <span className="dd-empty-state__icon">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                 </span>
-                <p>No completed donations yet.</p>
+                <p>{t('noCompletedDonations')}</p>
                 <p className="dd-empty-state__sub">
-                    Your completed donations will appear here.
+                    {t('completedDonationsWillAppear')}
                 </p>
             </div>
         )
@@ -51,11 +54,11 @@ export default function HistoryTable({ listings, loading, error }) {
             <table className="dd-table">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Food Type</th>
-                        <th>Quantity</th>
-                        <th>Meals</th>
-                        <th>Status</th>
+                        <th>{t('date')}</th>
+                        <th>{t('foodType')}</th>
+                        <th>{t('quantity')}</th>
+                        <th>{t('meals')}</th>
+                        <th>{t('status')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -67,7 +70,7 @@ export default function HistoryTable({ listings, loading, error }) {
                             <td>{item.meal_equivalent ?? '—'}</td>
                             <td>
                                 <span className="dd-status-badge dd-status--completed">
-                                    Completed
+                                    {t('completed')}
                                 </span>
                             </td>
                         </tr>

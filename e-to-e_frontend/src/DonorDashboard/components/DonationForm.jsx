@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import { playSuccessAnimation } from '../animations/dashboardAnimations'
 import { createListing } from '../../lib/donorApi'
@@ -42,6 +43,7 @@ function MapClickHandler({ onMapClick }) {
 }
 
 export default function DonationForm({ onSuccess }) {
+    const { t } = useTranslation('dashboard')
     const socket = useSocket()
     const [form, setForm] = useState({
         food_type: '',
@@ -129,14 +131,14 @@ export default function DonationForm({ onSuccess }) {
             !form.latitude ||
             !form.longitude
         ) {
-            setError('Please fill all required fields and select a location on the map.')
+            setError(t('fillAllFieldsError'))
             return
         }
 
         // Validate expiry_time is in the future
         const parsedExpiry = new Date(form.expiry_time)
         if (isNaN(parsedExpiry.getTime()) || parsedExpiry <= new Date()) {
-            setError('Expiry time must be a valid date in the future.')
+            setError(t('expiryTimeFutureError'))
             return
         }
 
@@ -197,7 +199,7 @@ export default function DonationForm({ onSuccess }) {
     return (
         <div className="dd-step-container">
             <div className="dd-step-header">
-                <h2 className="dd-step-title">Donation Details</h2>
+                <h2 className="dd-step-title">{t('donationDetails')}</h2>
             </div>
 
             {/* Real-time WhatsApp-like Notification */}
@@ -207,7 +209,7 @@ export default function DonationForm({ onSuccess }) {
                         {notification.type === 'success' ? '🚀' : '⚠️'}
                     </div>
                     <div className="dd-live-notification-content">
-                        <strong>Update from NGO</strong>
+                        <strong>{t('updateFromNGO')}</strong>
                         <p>{notification.message}</p>
                     </div>
                 </div>
@@ -218,7 +220,7 @@ export default function DonationForm({ onSuccess }) {
                     {/* Food Type */}
                     <div className="dd-form-group">
                         <label htmlFor="food_type" className="dd-form-label">
-                            Food Type *
+                            {t('foodTypeLabel')}
                         </label>
                         <select
                             id="food_type"
@@ -233,7 +235,7 @@ export default function DonationForm({ onSuccess }) {
                                 }
                             }}
                         >
-                            <option value="">Select food type</option>
+                            <option value="">{t('selectFoodType')}</option>
                             {FOOD_TYPES.map((t) => (
                                 <option key={t} value={t}>
                                     {t}
@@ -247,7 +249,7 @@ export default function DonationForm({ onSuccess }) {
                                 type="text"
                                 name="food_type"
                                 className="dd-form-input"
-                                placeholder="Enter custom food type"
+                                placeholder={t('enterCustomFoodType')}
                                 value={form.food_type}
                                 onChange={handleChange}
                                 style={{ marginTop: '0.5rem' }}
@@ -258,7 +260,7 @@ export default function DonationForm({ onSuccess }) {
                     {/* Quantity */}
                     <div className="dd-form-group">
                         <label htmlFor="quantity_kg" className="dd-form-label">
-                            Quantity (kg) *
+                            {t('quantityLabel')}
                         </label>
                         <input
                             id="quantity_kg"
@@ -267,7 +269,7 @@ export default function DonationForm({ onSuccess }) {
                             min="0.5"
                             step="0.5"
                             className="dd-form-input"
-                            placeholder="e.g. 5"
+                            placeholder={t('quantityPlaceholder')}
                             value={form.quantity_kg}
                             onChange={handleChange}
                         />
@@ -276,7 +278,7 @@ export default function DonationForm({ onSuccess }) {
                     {/* Meal Equivalent */}
                     <div className="dd-form-group">
                         <label htmlFor="meal_equivalent" className="dd-form-label">
-                            Meal Equivalent *
+                            {t('mealEquivalentLabel')}
                         </label>
                         <input
                             id="meal_equivalent"
@@ -284,7 +286,7 @@ export default function DonationForm({ onSuccess }) {
                             type="number"
                             min="1"
                             className="dd-form-input"
-                            placeholder="Number of meals"
+                            placeholder={t('mealEquivalentPlaceholder')}
                             value={form.meal_equivalent}
                             onChange={handleChange}
                         />
@@ -293,7 +295,7 @@ export default function DonationForm({ onSuccess }) {
                     {/* Expiry Time */}
                     <div className="dd-form-group">
                         <label htmlFor="expiry_time" className="dd-form-label">
-                            Expiry Time *
+                            {t('expiryTimeLabel')}
                         </label>
                         <input
                             id="expiry_time"
@@ -310,7 +312,7 @@ export default function DonationForm({ onSuccess }) {
 
                     <div className="dd-form-group dd-form-group--full">
                         <label className="dd-form-label">
-                            Pickup Location * — Click the map
+                            {t('pickupLocationLabel')}
                         </label>
                         <div className="dd-map-picker-wrapper">
                             <MapContainer
@@ -340,7 +342,7 @@ export default function DonationForm({ onSuccess }) {
                 {error && <div className="dd-form-error">{error}</div>}
                 {success && (
                     <div className="dd-form-success">
-                        ✓ Donation created successfully! All NGOs have been notified.
+                        {t('donationCreatedSuccess')}
                     </div>
                 )}
 
@@ -351,7 +353,7 @@ export default function DonationForm({ onSuccess }) {
                     disabled={submitting}
                     ref={submitBtnRef}
                 >
-                    {submitting ? 'Creating Donation…' : 'Create Donation'}
+                    {submitting ? t('creatingDonation') : t('createDonation')}
                 </button>
             </form>
         </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { gsap } from 'gsap'
 import {
     Building2,
@@ -13,20 +14,21 @@ import {
 } from 'lucide-react'
 
 const STAT_CONFIG = [
-    { key: 'totalNGOs', label: 'Total NGOs', Icon: Building2 },
-    { key: 'totalDonors', label: 'Total Donors', Icon: Handshake },
-    { key: 'totalVolunteers', label: 'Volunteers', Icon: Users },
-    { key: 'totalDonations', label: 'Total Donations', Icon: Package },
-    { key: 'activePickups', label: 'Active Pickups', Icon: Truck },
+    { key: 'totalNGOs', labelKey: 'totalNGOs', Icon: Building2 },
+    { key: 'totalDonors', labelKey: 'totalDonors', Icon: Handshake },
+    { key: 'totalVolunteers', labelKey: 'volunteers', Icon: Users },
+    { key: 'totalDonations', labelKey: 'totalDonations', Icon: Package },
+    { key: 'activePickups', labelKey: 'activePickups', Icon: Truck },
 ]
 
 const IMPACT_CONFIG = [
-    { key: 'total_meals_served', label: 'Meals Served', Icon: Utensils, suffix: '' },
-    { key: 'total_food_saved_kg', label: 'Food Saved', Icon: Wheat, suffix: ' kg' },
-    { key: 'total_co2_reduced_kg', label: 'CO₂ Reduced', Icon: Leaf, suffix: ' kg' },
+    { key: 'total_meals_served', labelKey: 'mealsServed', Icon: Utensils, suffix: '' },
+    { key: 'total_food_saved_kg', labelKey: 'foodSaved', Icon: Wheat, suffix: ' kg' },
+    { key: 'total_co2_reduced_kg', labelKey: 'co2Reduced', Icon: Leaf, suffix: ' kg' },
 ]
 
 export default function OverviewPanel({ stats, totalImpact }) {
+    const { t } = useTranslation('dashboard')
     const cardsRef = useRef(null)
     const countersRef = useRef([])
 
@@ -84,8 +86,8 @@ export default function OverviewPanel({ stats, totalImpact }) {
         <section className="admin-section" id="admin-overview-panel">
             <div className="admin-section__header">
                 <div>
-                    <h2 className="admin-section__title">Global Overview</h2>
-                    <p className="admin-section__subtitle">Real-time platform metrics</p>
+                    <h2 className="admin-section__title">{t('globalOverview')}</h2>
+                    <p className="admin-section__subtitle">{t('realTimePlatformMetrics')}</p>
                 </div>
             </div>
 
@@ -107,7 +109,7 @@ export default function OverviewPanel({ stats, totalImpact }) {
                             0
                         </div>
                         {cfg.suffix && <span className="admin-stat-card__suffix">{cfg.suffix}</span>}
-                        <div className="admin-stat-card__label">{cfg.label}</div>
+                        <div className="admin-stat-card__label">{t(cfg.labelKey)}</div>
                         <div className="admin-stat-card__glow" />
                     </div>
                 ))}
@@ -127,7 +129,7 @@ export default function OverviewPanel({ stats, totalImpact }) {
                                 <div className="admin-stat-card__value">
                                     {Number(val || 0).toLocaleString()}{cfg.suffix}
                                 </div>
-                                <div className="admin-stat-card__label">{cfg.label}</div>
+                                <div className="admin-stat-card__label">{t(cfg.labelKey)}</div>
                                 <div className="admin-stat-card__glow" />
                             </div>
                         )

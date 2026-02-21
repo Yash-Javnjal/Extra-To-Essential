@@ -1,23 +1,25 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNGO } from '../context/NGOContext'
 import { useAuth } from '../../../context/AuthContext'
 
-const NAV_ITEMS = [
-    { key: 'overview', label: 'Overview', icon: '⬡' },
-    { key: 'incoming', label: 'Incoming Donations', icon: '↓' },
-    { key: 'pickups', label: 'Accepted Pickups', icon: '✓' },
-    { key: 'volunteers', label: 'Volunteers', icon: '◉' },
-    { key: 'map', label: 'Operations Map', icon: '◎' },
-    { key: 'log', label: 'Activity Log', icon: '☰' },
-]
-
 export default function Sidebar({ activeView, onViewChange, collapsed, onToggleCollapse }) {
+    const { t } = useTranslation('dashboard')
     const { ngoProfile, user, stats } = useNGO()
     const auth = useAuth()
     const [mobileOpen, setMobileOpen] = useState(false)
     const sidebarRef = useRef(null)
 
-    const orgName = ngoProfile?.ngo_name || user?.organization_name || 'NGO Dashboard'
+    const NAV_ITEMS = [
+        { key: 'overview', label: t('ngo.overview'), icon: '⬡' },
+        { key: 'incoming', label: t('ngo.incomingDonations'), icon: '↓' },
+        { key: 'pickups', label: t('ngo.acceptedPickups'), icon: '✓' },
+        { key: 'volunteers', label: t('volunteers'), icon: '◉' },
+        { key: 'map', label: t('ngo.operationsMap'), icon: '◎' },
+        { key: 'log', label: t('ngo.activityLog'), icon: '☰' },
+    ]
+
+    const orgName = ngoProfile?.ngo_name || user?.organization_name || t('ngo.ngoDashboard')
     const contactPerson = ngoProfile?.contact_person || user?.full_name || ''
 
     /* Close mobile menu on resize */
@@ -104,7 +106,7 @@ export default function Sidebar({ activeView, onViewChange, collapsed, onToggleC
 
                 {/* Nav links */}
                 <nav className="ngo-sidebar__nav">
-                    <span className="ngo-sidebar__category">Operations</span>
+                    <span className="ngo-sidebar__category">{t('ngo.operations')}</span>
                     {NAV_ITEMS.map((item) => (
                         <button
                             key={item.key}
@@ -127,13 +129,13 @@ export default function Sidebar({ activeView, onViewChange, collapsed, onToggleC
                     </div>
                     <div className="ngo-sidebar__user-info">
                         <span className="ngo-sidebar__user-name">{contactPerson}</span>
-                        <span className="ngo-sidebar__user-role">NGO Operator</span>
+                        <span className="ngo-sidebar__user-role">{t('ngo.ngoOperator')}</span>
                     </div>
                 </div>
 
                 <button className="ngo-sidebar__logout" onClick={handleLogout}>
                     <span className="ngo-sidebar__link-icon">⏻</span>
-                    <span className="ngo-sidebar__link-text">Log Out</span>
+                    <span className="ngo-sidebar__link-text">{t('ngo.logOut')}</span>
                 </button>
             </aside>
         </>

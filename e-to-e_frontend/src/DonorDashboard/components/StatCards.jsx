@@ -1,16 +1,18 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { animateCounter } from '../animations/dashboardAnimations'
 import { SkeletonCard } from './Loader'
 
-const STATS_CONFIG = [
-    { key: 'total', label: 'Total Donations', icon: '◆' },
-    { key: 'active', label: 'Active Pickups', icon: '↗' },
-    { key: 'completed', label: 'Completed', icon: '✓' },
-    { key: 'ngos', label: 'Deliveries', icon: '◎' },
-]
-
 export default function StatCards({ stats, loading }) {
+    const { t } = useTranslation('dashboard')
     const counterRefs = useRef([])
+
+    const STATS_CONFIG = [
+        { key: 'total', label: t('totalDonations'), icon: '◆' },
+        { key: 'active', label: t('activePickups'), icon: '↗' },
+        { key: 'completed', label: t('completed'), icon: '✓' },
+        { key: 'ngos', label: t('deliveries'), icon: '◎' },
+    ]
 
     useEffect(() => {
         if (loading || !stats) return

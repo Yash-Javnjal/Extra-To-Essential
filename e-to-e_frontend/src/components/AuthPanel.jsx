@@ -1,6 +1,7 @@
 import { useEffect, useRef, forwardRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { loginUser, registerUser, createDonorProfile, createNGOProfile } from '../lib/api'
 import { verifyDonor, verifyNGO } from '../lib/adminApi'
 import { useAuth } from '../context/AuthContext'
@@ -45,27 +46,29 @@ const EyeOffIcon = () => (
 
 /* ─── Terms & Conditions Modal ─── */
 function TermsModal({ onClose, onAccept }) {
+    const { t } = useTranslation('forms')
+    
     return (
         <div className="auth-terms-overlay">
             <div className="auth-terms-modal">
                 <div className="auth-terms-header">
-                    <h3>Terms & Conditions</h3>
+                    <h3>{t('termsAndConditionsTitle')}</h3>
                     <button className="auth-terms-close" onClick={onClose} type="button">×</button>
                 </div>
                 <div className="auth-terms-content">
-                    <p>By registering on this platform, you acknowledge and agree to the following:</p>
+                    <p>{t('termsIntro')}</p>
                     <ul>
-                        <li>This platform acts solely as a facilitator connecting food donors and NGOs.</li>
-                        <li>All food safety responsibility lies with the donor and receiving organization.</li>
-                        <li>The platform does not guarantee quality, safety, or suitability of donated food.</li>
-                        <li>In case of food poisoning, contamination, or any health issue arising from food donations, the platform shall not be held legally or financially responsible.</li>
-                        <li>Users participate at their own discretion and risk.</li>
+                        <li>{t('termsFacilitator')}</li>
+                        <li>{t('termsSafety')}</li>
+                        <li>{t('termsNoGuarantee')}</li>
+                        <li>{t('termsLiability')}</li>
+                        <li>{t('termsParticipation')}</li>
                     </ul>
-                    <p>By accepting these terms, you release the platform and its operators from liability related to food quality or consumption outcomes.</p>
+                    <p>{t('termsRelease')}</p>
                 </div>
                 <div className="auth-terms-footer">
                     <button className="auth-terms-accept-btn" onClick={onAccept} type="button">
-                        I Accept
+                        {t('iAccept')}
                     </button>
                 </div>
             </div>
@@ -77,6 +80,7 @@ function TermsModal({ onClose, onAccept }) {
    LOGIN FORM
    ───────────────────────────────────────────── */
 export const LoginForm = forwardRef(function LoginForm({ onToggle, onOAuthRoleMissing, ...props }, ref) {
+    const { t } = useTranslation('forms')
     const headingRef = useRef(null)
     const subtitleRef = useRef(null)
     const fieldsRef = useRef(null)
@@ -114,7 +118,7 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle, onOAuthRoleMi
     }, [])
 
     // Split title text into characters
-    const titleChars = 'Welcome Back'.split('').map((char, i) => (
+    const titleChars = t('welcomeBack').split('').map((char, i) => (
         <span className="char" key={i} style={{ display: 'inline-block' }}>
             {char === ' ' ? '\u00A0' : char}
         </span>
@@ -125,7 +129,7 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle, onOAuthRoleMi
         setError('')
 
         if (!email || !password) {
-            setError('Please fill in all fields.')
+            setError(t('pleaseFillAllFields'))
             return
         }
 
@@ -140,7 +144,7 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle, onOAuthRoleMi
             const role = data.user?.role
             navigate(auth.getDashboardPath(role))
         } catch (err) {
-            setError(err.message || 'Login failed. Check your credentials.')
+            setError(err.message || t('loginFailed'))
         } finally {
             setLoading(false)
         }
@@ -152,7 +156,7 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle, onOAuthRoleMi
                 {titleChars}
             </h1>
             <p className="auth-subtitle" ref={subtitleRef}>
-                Continue your mission of impact.
+                {t('continueYourMission')}
             </p>
 
             {error && <div className="auth-error-msg">{error}</div>}
@@ -163,11 +167,11 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle, onOAuthRoleMi
 
                 <div className="auth-fields" ref={fieldsRef}>
                     <div className="auth-input-group">
-                        <label htmlFor="login-email">Email</label>
+                        <label htmlFor="login-email">{t('email')}</label>
                         <input
                             type="email"
                             id="login-email"
-                            placeholder="you@example.com"
+                            placeholder={t('emailPlaceholder')}
                             autoComplete="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -176,12 +180,12 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle, onOAuthRoleMi
                     </div>
 
                     <div className="auth-input-group">
-                        <label htmlFor="login-password">Password</label>
+                        <label htmlFor="login-password">{t('password')}</label>
                         <div className="auth-password-wrapper">
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 id="login-password"
-                                placeholder="••••••••"
+                                placeholder={t('passwordPlaceholder')}
                                 autoComplete="current-password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -190,7 +194,7 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle, onOAuthRoleMi
                                 type="button"
                                 className="auth-password-toggle"
                                 onClick={() => setShowPassword(!showPassword)}
-                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                aria-label={showPassword ? t('hidePassword') : t('showPassword')}
                                 tabIndex={-1}
                             >
                                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -209,19 +213,19 @@ export const LoginForm = forwardRef(function LoginForm({ onToggle, onOAuthRoleMi
                     {loading ? (
                         <span className="auth-btn-spinner" />
                     ) : (
-                        'Login'
+                        t('login')
                     )}
                 </button>
             </form>
 
             <div className="auth-toggle" ref={toggleRef}>
-                Don't have an account?
+                {t('dontHaveAccount')}
                 <button
                     className="auth-toggle-link"
                     type="button"
                     onClick={onToggle}
                 >
-                    Create one
+                    {t('createOne')}
                 </button>
             </div>
         </div>
@@ -235,6 +239,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
     { onToggle },
     ref
 ) {
+    const { t } = useTranslation('forms')
     const navigate = useNavigate()
     const auth = useAuth()
 
@@ -292,20 +297,20 @@ export const RegisterForm = forwardRef(function RegisterForm(
     const step2Ref = useRef(null)
 
     // Split title text into characters
-    const step1TitleChars = 'Join Movement'.split('').map((char, i) => (
+    const step1TitleChars = t('joinMovement').split('').map((char, i) => (
         <span className="char" key={i} style={{ display: 'inline-block' }}>
             {char === ' ' ? '\u00A0' : char}
         </span>
     ))
 
     const step2Titles = {
-        donor: 'Donor Profile',
-        ngo: 'NGO Profile',
-        volunteer: 'Volunteer Profile',
-        admin: 'Almost Done',
+        donor: t('donorProfile'),
+        ngo: t('ngoProfile'),
+        volunteer: t('volunteerProfile'),
+        admin: t('almostDone'),
     }
 
-    const step2TitleChars = (step2Titles[role] || 'Profile').split('').map((char, i) => (
+    const step2TitleChars = (step2Titles[role] || t('volunteerProfile')).split('').map((char, i) => (
         <span className="char" key={i} style={{ display: 'inline-block' }}>
             {char === ' ' ? '\u00A0' : char}
         </span>
@@ -322,26 +327,26 @@ export const RegisterForm = forwardRef(function RegisterForm(
         // Validation
         const hasOrg = ['donor', 'ngo'].includes(role)
         if (!fullName || !email || !password || !confirmPassword || !phoneNumber) {
-            setError('Please fill in all fields.')
+            setError(t('pleaseFillAllFields'))
             return
         }
         if (hasOrg && !organizationName) {
-            setError('Please fill in the organization name.')
+            setError(t('pleaseFillOrgName'))
             return
         }
 
         if (!acceptedTerms) {
-            setError('You must accept the Terms & Conditions to continue.')
+            setError(t('youMustAcceptTerms'))
             return
         }
 
         if (password !== confirmPassword) {
-            setError('Passwords do not match.')
+            setError(t('passwordsMustMatch'))
             return
         }
 
         if (password.length < 6) {
-            setError('Password must be at least 6 characters.')
+            setError(t('passwordMinLength'))
             return
         }
 
@@ -423,7 +428,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 }
             })
         } catch (err) {
-            setError(err.message || 'Registration failed.')
+            setError(err.message || t('registrationFailed'))
         } finally {
             setLoading(false)
         }
@@ -435,12 +440,12 @@ export const RegisterForm = forwardRef(function RegisterForm(
         setError('')
 
         if (!donorAddress || !donorCity || donorLat == null || donorLng == null) {
-            setError('Please select an address from the suggestions.')
+            setError(t('selectAddressFromSuggestions'))
             return
         }
 
         if (!businessType) {
-            setError('Please select a business type.')
+            setError(t('selectBusinessTypeRequired'))
             return
         }
 
@@ -473,7 +478,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
 
             navigate(auth.getDashboardPath('donor'))
         } catch (err) {
-            setError(err.message || 'Failed to create donor profile.')
+            setError(err.message || t('profileCreationFailed'))
         } finally {
             setLoading(false)
         }
@@ -485,11 +490,11 @@ export const RegisterForm = forwardRef(function RegisterForm(
         setError('')
 
         if (!ngoName || !contactPerson) {
-            setError('Please fill in NGO name and contact person.')
+            setError(t('fillNGONameAndContact'))
             return
         }
         if (!ngoAddress || !ngoCity || ngoLat == null || ngoLng == null) {
-            setError('Please select an address from the suggestions.')
+            setError(t('selectAddressFromSuggestions'))
             return
         }
 
@@ -524,7 +529,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
 
             navigate(auth.getDashboardPath('ngo'))
         } catch (err) {
-            setError(err.message || 'Failed to create NGO profile.')
+            setError(err.message || t('profileCreationFailed'))
         } finally {
             setLoading(false)
         }
@@ -579,24 +584,24 @@ export const RegisterForm = forwardRef(function RegisterForm(
                 <>
                     <h1 className="auth-heading">{step1TitleChars}</h1>
                     <p className="auth-subtitle">
-                        Be part of climate-conscious food redistribution.
+                        {t('bePart')}
                     </p>
 
                     {error && <div className="auth-error-msg">{error}</div>}
 
                     <div className="auth-input-group">
-                        <label>Select your Role</label>
+                        <label>{t('selectYourRole')}</label>
                         <RoleSelector value={role} onChange={setRole} />
                     </div>
 
                     <form onSubmit={handleStep1Submit}>
                         <div className="auth-fields">
                             <div className="auth-input-group">
-                                <label htmlFor="register-name">Full Name</label>
+                                <label htmlFor="register-name">{t('fullName')}</label>
                                 <input
                                     type="text"
                                     id="register-name"
-                                    placeholder="Your full name"
+                                    placeholder={t('fullNamePlaceholder')}
                                     autoComplete="name"
                                     value={fullName}
                                     onChange={(e) => setFullName(e.target.value)}
@@ -605,11 +610,11 @@ export const RegisterForm = forwardRef(function RegisterForm(
                             </div>
 
                             <div className="auth-input-group">
-                                <label htmlFor="register-email">Email</label>
+                                <label htmlFor="register-email">{t('email')}</label>
                                 <input
                                     type="email"
                                     id="register-email"
-                                    placeholder="you@example.com"
+                                    placeholder={t('emailPlaceholder')}
                                     autoComplete="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -619,12 +624,12 @@ export const RegisterForm = forwardRef(function RegisterForm(
 
                             <div className="auth-fields-row">
                                 <div className="auth-input-group">
-                                    <label htmlFor="register-password">Password</label>
+                                    <label htmlFor="register-password">{t('password')}</label>
                                     <div className="auth-password-wrapper">
                                         <input
                                             type={showPassword ? 'text' : 'password'}
                                             id="register-password"
-                                            placeholder="••••••••"
+                                            placeholder={t('passwordPlaceholder')}
                                             autoComplete="new-password"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
@@ -633,7 +638,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                                             type="button"
                                             className="auth-password-toggle"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                            aria-label={showPassword ? t('hidePassword') : t('showPassword')}
                                             tabIndex={-1}
                                         >
                                             {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -643,12 +648,12 @@ export const RegisterForm = forwardRef(function RegisterForm(
                                 </div>
 
                                 <div className="auth-input-group">
-                                    <label htmlFor="register-confirm-password">Confirm Password</label>
+                                    <label htmlFor="register-confirm-password">{t('confirmPassword')}</label>
                                     <div className="auth-password-wrapper">
                                         <input
                                             type={showConfirmPassword ? 'text' : 'password'}
                                             id="register-confirm-password"
-                                            placeholder="••••••••"
+                                            placeholder={t('confirmPasswordPlaceholder')}
                                             autoComplete="new-password"
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -657,7 +662,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                                             type="button"
                                             className="auth-password-toggle"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                                            aria-label={showConfirmPassword ? t('hidePassword') : t('showPassword')}
                                             tabIndex={-1}
                                         >
                                             {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -668,7 +673,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                             </div>
 
                             <div className="auth-input-group">
-                                <label htmlFor="register-phone">Phone Number</label>
+                                <label htmlFor="register-phone">{t('phoneNumber')}</label>
                                 <div className="auth-phone-wrapper">
                                     <select
                                         className="auth-phone-code"
@@ -685,7 +690,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                                     <input
                                         type="tel"
                                         id="register-phone"
-                                        placeholder="00000 00000"
+                                        placeholder={t('phoneNumberPlaceholder')}
                                         autoComplete="tel"
                                         value={phoneNumber}
                                         onChange={(e) => setPhoneNumber(e.target.value)}
@@ -693,7 +698,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                                 </div>
                                 {showCountryWarning && (
                                     <p className="auth-country-warning">
-                                        ⚠ Currently this web application is only supported for India. In future, other countries will be added into the list.
+                                        {t('countryWarning')}
                                     </p>
                                 )}
                                 <span className="auth-input-line" />
@@ -702,11 +707,11 @@ export const RegisterForm = forwardRef(function RegisterForm(
                             {/* Organization Name — only for donor & ngo */}
                             {['donor', 'ngo'].includes(role) && (
                                 <div className="auth-input-group">
-                                    <label htmlFor="register-org">Organization Name</label>
+                                    <label htmlFor="register-org">{t('organizationName')}</label>
                                     <input
                                         type="text"
                                         id="register-org"
-                                        placeholder="Your organization"
+                                        placeholder={t('organizationPlaceholder')}
                                         autoComplete="organization"
                                         value={organizationName}
                                         onChange={(e) => setOrganizationName(e.target.value)}
@@ -727,7 +732,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                                 onChange={(e) => setAcceptedTerms(e.target.checked)}
                             />
                             <label htmlFor="terms-checkbox" className="auth-terms-label">
-                                I agree to the <button type="button" className="auth-terms-link" onClick={() => setShowTerms(true)}>Terms & Conditions</button>
+                                {t('iAgreeToThe')} <button type="button" className="auth-terms-link" onClick={() => setShowTerms(true)}>{t('termsAndConditions')}</button>
                             </label>
                         </div>
 
@@ -739,21 +744,21 @@ export const RegisterForm = forwardRef(function RegisterForm(
                             {loading ? (
                                 <span className="auth-btn-spinner" />
                             ) : role === 'admin' ? (
-                                'Create Admin Account'
+                                t('createAdminAccount')
                             ) : (
-                                'Continue'
+                                t('continue')
                             )}
                         </button>
                     </form>
 
                     <div className="auth-toggle">
-                        Already have an account?
+                        {t('alreadyHaveAccount')}
                         <button
                             className="auth-toggle-link"
                             type="button"
                             onClick={onToggle}
                         >
-                            Login
+                            {t('login')}
                         </button>
                     </div>
                 </>
@@ -768,7 +773,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                             className="auth-back-btn"
                             onClick={() => setStep(1)}
                             disabled
-                            title="You've already registered. Complete your profile."
+                            title={t('youveAlreadyRegistered')}
                         >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="15 18 9 12 15 6" />
@@ -777,7 +782,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
 
                         <h1 className="auth-heading">{step2TitleChars}</h1>
                         <p className="auth-subtitle">
-                            Complete your donor profile to start donating surplus food.
+                            {t('completeDonorProfile')}
                         </p>
 
                         {error && <div className="auth-error-msg">{error}</div>}
@@ -786,19 +791,19 @@ export const RegisterForm = forwardRef(function RegisterForm(
                             <div className="auth-fields">
                                 {/* Business Type Dropdown */}
                                 <div className="auth-input-group">
-                                    <label htmlFor="donor-business-type">Business Type</label>
+                                    <label htmlFor="donor-business-type">{t('businessType')}</label>
                                     <select
                                         id="donor-business-type"
                                         value={businessType}
                                         onChange={(e) => setBusinessType(e.target.value)}
                                         className="auth-select"
                                     >
-                                        <option value="">Select business type</option>
-                                        <option value="restaurant">Restaurant</option>
-                                        <option value="catering">Catering</option>
-                                        <option value="hotel">Hotel</option>
-                                        <option value="individual">Individual</option>
-                                        <option value="other">Other</option>
+                                        <option value="">{t('selectBusinessType')}</option>
+                                        <option value="restaurant">{t('restaurant')}</option>
+                                        <option value="catering">{t('catering')}</option>
+                                        <option value="hotel">{t('hotel')}</option>
+                                        <option value="individual">{t('individual')}</option>
+                                        <option value="other">{t('other')}</option>
                                     </select>
                                     <span className="auth-input-line" />
                                 </div>
@@ -838,8 +843,8 @@ export const RegisterForm = forwardRef(function RegisterForm(
                                         />
                                         <span className="auth-checkbox-custom" />
                                         <span className="auth-checkbox-text">
-                                            CSR Participant
-                                            <small>Enable if this is part of your Corporate Social Responsibility initiative</small>
+                                            {t('csrParticipant')}
+                                            <small>{t('csrParticipantDesc')}</small>
                                         </span>
                                     </label>
                                 </div>
@@ -850,7 +855,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                                 type="submit"
                                 disabled={loading}
                             >
-                                {loading ? <span className="auth-btn-spinner" /> : '✓ Complete & Verify Registration'}
+                                {loading ? <span className="auth-btn-spinner" /> : t('completeVerifyRegistration')}
                             </button>
                         </form>
                     </div>
@@ -866,7 +871,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                             className="auth-back-btn"
                             onClick={() => setStep(1)}
                             disabled
-                            title="You've already registered. Complete your profile."
+                            title={t('youveAlreadyRegistered')}
                         >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="15 18 9 12 15 6" />
@@ -875,7 +880,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
 
                         <h1 className="auth-heading">{step2TitleChars}</h1>
                         <p className="auth-subtitle">
-                            Set up your NGO to start receiving surplus food donations.
+                            {t('completeNGOProfile')}
                         </p>
 
                         {error && <div className="auth-error-msg">{error}</div>}
@@ -883,11 +888,11 @@ export const RegisterForm = forwardRef(function RegisterForm(
                         <form onSubmit={handleNGOSubmit}>
                             <div className="auth-fields">
                                 <div className="auth-input-group">
-                                    <label htmlFor="ngo-name">NGO Name</label>
+                                    <label htmlFor="ngo-name">{t('ngoName')}</label>
                                     <input
                                         type="text"
                                         id="ngo-name"
-                                        placeholder="Your NGO name"
+                                        placeholder={t('ngoNamePlaceholder')}
                                         value={ngoName}
                                         onChange={(e) => setNgoName(e.target.value)}
                                     />
@@ -895,11 +900,11 @@ export const RegisterForm = forwardRef(function RegisterForm(
                                 </div>
 
                                 <div className="auth-input-group">
-                                    <label htmlFor="ngo-regnumber">Registration Number <span className="auth-optional">(Optional)</span></label>
+                                    <label htmlFor="ngo-regnumber">{t('registrationNumber')} <span className="auth-optional">({t('optional')})</span></label>
                                     <input
                                         type="text"
                                         id="ngo-regnumber"
-                                        placeholder="e.g. NGO-MH-2024-1234"
+                                        placeholder={t('registrationNumberPlaceholder')}
                                         value={registrationNumber}
                                         onChange={(e) => setRegistrationNumber(e.target.value)}
                                     />
@@ -907,11 +912,11 @@ export const RegisterForm = forwardRef(function RegisterForm(
                                 </div>
 
                                 <div className="auth-input-group">
-                                    <label htmlFor="ngo-contact">Contact Person Name</label>
+                                    <label htmlFor="ngo-contact">{t('contactPersonName')}</label>
                                     <input
                                         type="text"
                                         id="ngo-contact"
-                                        placeholder="Primary contact person"
+                                        placeholder={t('contactPersonPlaceholder')}
                                         value={contactPerson}
                                         onChange={(e) => setContactPerson(e.target.value)}
                                     />
@@ -951,7 +956,7 @@ export const RegisterForm = forwardRef(function RegisterForm(
                                 type="submit"
                                 disabled={loading}
                             >
-                                {loading ? <span className="auth-btn-spinner" /> : '✓ Complete & Verify Registration'}
+                                {loading ? <span className="auth-btn-spinner" /> : t('completeVerifyRegistration')}
                             </button>
                         </form>
                     </div>
@@ -970,14 +975,14 @@ export const RegisterForm = forwardRef(function RegisterForm(
                         </div>
                         <h1 className="auth-heading">{step2TitleChars}</h1>
                         <p className="auth-subtitle">
-                            Your volunteer account has been created successfully. You can now join community drives and help with food distribution.
+                            {t('volunteerAccountCreated')}
                         </p>
                         <button
                             className="auth-submit-btn"
                             type="button"
                             onClick={handleVolunteerComplete}
                         >
-                            Go to Dashboard
+                            {t('goToDashboard')}
                         </button>
                     </div>
                 )
@@ -995,14 +1000,14 @@ export const RegisterForm = forwardRef(function RegisterForm(
                         </div>
                         <h1 className="auth-heading">{step2TitleChars}</h1>
                         <p className="auth-subtitle">
-                            Your admin account has been created successfully. Welcome aboard.
+                            {t('adminAccountCreated')}
                         </p>
                         <button
                             className="auth-submit-btn"
                             type="button"
                             onClick={handleAdminComplete}
                         >
-                            Go to Dashboard
+                            {t('goToDashboard')}
                         </button>
                     </div>
                 )

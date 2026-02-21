@@ -1,8 +1,10 @@
 import { useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNGO } from '../context/NGOContext'
 import { animateRowsStagger, animateButtonPress } from '../animations/ngoAnimations'
 
 export default function IncomingDonations() {
+    const { t } = useTranslation('dashboard')
     const { listings, loading, errors, handleClaimListing, fetchListings } = useNGO()
 
     useEffect(() => {
@@ -49,8 +51,8 @@ export default function IncomingDonations() {
         if (listing.organization_name) return listing.organization_name
         if (listing.donors?.organization_name) return listing.donors.organization_name
         if (listing.donor_name) return listing.donor_name
-        if (listing.donors?.city) return `Donor (${listing.donors.city})`
-        return 'Unknown Donor'
+        if (listing.donors?.city) return `${t('ngo.donor')} (${listing.donors.city})`
+        return t('ngo.unknownDonor')
     }
 
     function getDonorPhone(listing) {
@@ -66,7 +68,7 @@ export default function IncomingDonations() {
             return (
                 <>
                     <span className={`ngo-distance-badge ${isFar ? 'ngo-distance-badge--far' : 'ngo-distance-badge--near'}`}>
-                        {isFar ? '⚠ Far' : '✓ Nearby'}
+                        {isFar ? `⚠ ${t('ngo.far')}` : `✓ ${t('ngo.nearby')}`}
                     </span>
                     {' '}{km} km
                 </>
@@ -78,7 +80,7 @@ export default function IncomingDonations() {
     function getTimeRemaining(expiryTime) {
         if (!expiryTime) return '—'
         const diff = new Date(expiryTime) - new Date()
-        if (diff <= 0) return 'Expired'
+        if (diff <= 0) return t('ngo.expired')
         const hours = Math.floor(diff / 3600000)
         const mins = Math.floor((diff % 3600000) / 60000)
         if (hours > 24) return `${Math.floor(hours / 24)}d ${hours % 24}h`
@@ -103,7 +105,7 @@ export default function IncomingDonations() {
                 <span className="ngo-error-state__icon">⚠</span>
                 <p>{errors.listings}</p>
                 <button className="ngo-btn ngo-btn--outline" onClick={fetchListings}>
-                    Retry
+                    {t('retry', { ns: 'common' })}
                 </button>
             </div>
         )
@@ -113,8 +115,8 @@ export default function IncomingDonations() {
         return (
             <div className="ngo-empty-state">
                 <span className="ngo-empty-state__icon">☐</span>
-                <h4>No incoming donations</h4>
-                <p>New donations within your service radius will appear here automatically.</p>
+                <h4>{t('ngo.noIncomingDonations')}</h4>
+                <p>{t('ngo.newDonationsWillAppear')}</p>
             </div>
         )
     }
@@ -124,13 +126,13 @@ export default function IncomingDonations() {
             <table className="ngo-table">
                 <thead>
                     <tr>
-                        <th>Donor</th>
-                        <th>Food Type</th>
-                        <th>Quantity</th>
-                        <th>Distance</th>
-                        <th>Expiry</th>
-                        <th>Address</th>
-                        <th>Action</th>
+                        <th>{t('ngo.donor')}</th>
+                        <th>{t('foodType')}</th>
+                        <th>{t('quantity')}</th>
+                        <th>{t('ngo.distance')}</th>
+                        <th>{t('ngo.expiry')}</th>
+                        <th>{t('address')}</th>
+                        <th>{t('actions')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -145,7 +147,7 @@ export default function IncomingDonations() {
                             <td>{getDistance(listing)}</td>
                             <td>
                                 <span
-                                    className={`ngo-expiry-badge ${getTimeRemaining(listing.expiry_time) === 'Expired'
+                                    className={`ngo-expiry-badge ${getTimeRemaining(listing.expiry_time) === t('ngo.expired')
                                         ? 'ngo-expiry-badge--expired'
                                         : ''
                                         }`}
@@ -163,7 +165,7 @@ export default function IncomingDonations() {
                                         onClick={(e) => handleAccept(listing, e)}
                                         disabled={loading.action}
                                     >
-                                        {loading.action ? 'Accepting...' : 'Accept'}
+                                        {loading.action ? t('ngo.accepting') : t('ngo.accept')}
                                     </button>
                                     <button
                                         className="ngo-btn ngo-btn--outline"
@@ -171,7 +173,7 @@ export default function IncomingDonations() {
                                         disabled={loading.action}
                                         style={{ marginLeft: '8px' }}
                                     >
-                                        Reject
+                                        {t('ngo.reject')}
                                     </button>
                                 </div>
                             </td>
